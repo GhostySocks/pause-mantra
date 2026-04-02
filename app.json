@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Pause Mantra",
+    "slug": "pausemantra",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "pausemantra",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#321650"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pausemantra.app",
+      "infoPlist": {
+        "UIBackgroundModes": ["fetch", "remote-notification"]
+      }
+    },
+    "android": {
+      "package": "com.pausemantra.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#321650"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-sqlite",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#321650",
+          "dark": {
+            "backgroundColor": "#321650"
+          }
+        }
+      ]
+    ]
+  }
+}

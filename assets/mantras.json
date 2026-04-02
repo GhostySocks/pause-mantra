@@ -1,0 +1,527 @@
+[
+  {
+    "id": "seed-001",
+    "text": "I am a powerful magnet for wealth and infinite abundance.",
+    "category": "Abundance"
+  },
+  {
+    "id": "seed-002",
+    "text": "My life overflows with prosperity in every beautiful form.",
+    "category": "Abundance"
+  },
+  {
+    "id": "seed-003",
+    "text": "I attract financial freedom and abundance with effortless grace.",
+    "category": "Abundance"
+  },
+  {
+    "id": "seed-004",
+    "text": "Every day I receive more blessings than I ever imagined.",
+    "category": "Abundance"
+  },
+  {
+    "id": "seed-005",
+    "text": "I am worthy of receiving limitless abundance from the universe.",
+    "category": "Abundance"
+  },
+  {
+    "id": "seed-006",
+    "text": "My energy aligns perfectly with the frequency of pure abundance.",
+    "category": "Abundance"
+  },
+  {
+    "id": "seed-007",
+    "text": "I have everything I need and more flows to me daily.",
+    "category": "Abundance"
+  },
+  {
+    "id": "seed-008",
+    "text": "I am deeply worthy of love exactly as I am today.",
+    "category": "Self-Love"
+  },
+  {
+    "id": "seed-009",
+    "text": "My heart radiates unconditional love for myself and my journey.",
+    "category": "Self-Love"
+  },
+  {
+    "id": "seed-010",
+    "text": "I honor my soul by choosing kindness toward myself each moment.",
+    "category": "Self-Love"
+  },
+  {
+    "id": "seed-011",
+    "text": "Every part of me deserves tenderness, patience, and deep compassion.",
+    "category": "Self-Love"
+  },
+  {
+    "id": "seed-012",
+    "text": "I am enough and my presence alone is a sacred gift.",
+    "category": "Self-Love"
+  },
+  {
+    "id": "seed-013",
+    "text": "My relationship with myself sets the tone for all my blessings.",
+    "category": "Self-Love"
+  },
+  {
+    "id": "seed-014",
+    "text": "I embrace my imperfections as beautiful threads in my divine tapestry.",
+    "category": "Self-Love"
+  },
+  {
+    "id": "seed-015",
+    "text": "I am confident in my unique abilities and divine inner power.",
+    "category": "Confidence"
+  },
+  {
+    "id": "seed-016",
+    "text": "My voice matters and I speak my truth with bold clarity.",
+    "category": "Confidence"
+  },
+  {
+    "id": "seed-017",
+    "text": "I stand tall in my worth and radiate unshakeable self-assurance.",
+    "category": "Confidence"
+  },
+  {
+    "id": "seed-018",
+    "text": "Every challenge I face strengthens my belief in who I am.",
+    "category": "Confidence"
+  },
+  {
+    "id": "seed-019",
+    "text": "I trust myself completely and my decisions are guided by wisdom.",
+    "category": "Confidence"
+  },
+  {
+    "id": "seed-020",
+    "text": "My confidence grows stronger with every breath I take today.",
+    "category": "Confidence"
+  },
+  {
+    "id": "seed-021",
+    "text": "I am bold, magnetic, and deeply certain of my path forward.",
+    "category": "Confidence"
+  },
+  {
+    "id": "seed-022",
+    "text": "My body is a sacred temple and I nourish it with love.",
+    "category": "Health"
+  },
+  {
+    "id": "seed-023",
+    "text": "Every cell in my body vibrates with radiant health and vitality.",
+    "category": "Health"
+  },
+  {
+    "id": "seed-024",
+    "text": "I am in perfect harmony with my body's natural healing wisdom.",
+    "category": "Health"
+  },
+  {
+    "id": "seed-025",
+    "text": "My mind, body, and spirit align in complete and vibrant wellness.",
+    "category": "Health"
+  },
+  {
+    "id": "seed-026",
+    "text": "I attract healing energy that restores and rejuvenates my entire being.",
+    "category": "Health"
+  },
+  {
+    "id": "seed-027",
+    "text": "Every breath I take fills me with pure restorative light.",
+    "category": "Health"
+  },
+  {
+    "id": "seed-028",
+    "text": "I honor my body's needs and it rewards me with glowing health.",
+    "category": "Health"
+  },
+  {
+    "id": "seed-029",
+    "text": "I am deeply grateful for the miracles that surround me every day.",
+    "category": "Gratitude"
+  },
+  {
+    "id": "seed-030",
+    "text": "My heart overflows with thankfulness for this precious beautiful life.",
+    "category": "Gratitude"
+  },
+  {
+    "id": "seed-031",
+    "text": "Every moment holds a blessing and I receive it with open arms.",
+    "category": "Gratitude"
+  },
+  {
+    "id": "seed-032",
+    "text": "I attract more abundance by appreciating everything I already have today.",
+    "category": "Gratitude"
+  },
+  {
+    "id": "seed-033",
+    "text": "My gratitude transforms ordinary moments into extraordinary gifts of grace.",
+    "category": "Gratitude"
+  },
+  {
+    "id": "seed-034",
+    "text": "I am thankful for my journey and every lesson it brings me.",
+    "category": "Gratitude"
+  },
+  {
+    "id": "seed-035",
+    "text": "Every sunrise reminds me of the infinite blessings in my life.",
+    "category": "Gratitude"
+  },
+  {
+    "id": "seed-036",
+    "text": "My mind is sharp, clear, and fully present in this moment.",
+    "category": "Focus"
+  },
+  {
+    "id": "seed-037",
+    "text": "I direct my energy with laser-like intention toward what truly matters.",
+    "category": "Focus"
+  },
+  {
+    "id": "seed-038",
+    "text": "Every thought I choose aligns me closer to my highest goals.",
+    "category": "Focus"
+  },
+  {
+    "id": "seed-039",
+    "text": "I am fully immersed in the power of the present moment.",
+    "category": "Focus"
+  },
+  {
+    "id": "seed-040",
+    "text": "My concentration deepens naturally and I achieve extraordinary results with ease.",
+    "category": "Focus"
+  },
+  {
+    "id": "seed-041",
+    "text": "I release distractions and embrace the sacred flow of deep focus.",
+    "category": "Focus"
+  },
+  {
+    "id": "seed-042",
+    "text": "My attention is a divine gift and I invest it wisely.",
+    "category": "Focus"
+  },
+  {
+    "id": "seed-043",
+    "text": "I attract loving souls who uplift and celebrate my authentic spirit.",
+    "category": "Connection"
+  },
+  {
+    "id": "seed-044",
+    "text": "My heart is open and I give and receive love freely.",
+    "category": "Connection"
+  },
+  {
+    "id": "seed-045",
+    "text": "I am surrounded by deep, meaningful, and soul-nourishing relationships.",
+    "category": "Connection"
+  },
+  {
+    "id": "seed-046",
+    "text": "Every connection I make is divinely guided and purposefully aligned.",
+    "category": "Connection"
+  },
+  {
+    "id": "seed-047",
+    "text": "I radiate warmth and others feel safe and seen in my presence.",
+    "category": "Connection"
+  },
+  {
+    "id": "seed-048",
+    "text": "My bonds with loved ones grow stronger and more beautiful each day.",
+    "category": "Connection"
+  },
+  {
+    "id": "seed-049",
+    "text": "I am a beacon of love that draws kindred spirits into my life.",
+    "category": "Connection"
+  },
+  {
+    "id": "seed-050",
+    "text": "I am aligned with success and it flows to me effortlessly.",
+    "category": "Success"
+  },
+  {
+    "id": "seed-051",
+    "text": "Every action I take moves me powerfully toward my greatest achievements.",
+    "category": "Success"
+  },
+  {
+    "id": "seed-052",
+    "text": "My path is paved with golden opportunities that I recognize and seize.",
+    "category": "Success"
+  },
+  {
+    "id": "seed-053",
+    "text": "I am destined for greatness and my efforts yield magnificent results.",
+    "category": "Success"
+  },
+  {
+    "id": "seed-054",
+    "text": "My dreams manifest into reality through my inspired and intentional action.",
+    "category": "Success"
+  },
+  {
+    "id": "seed-055",
+    "text": "I attract success in all areas of my life with divine timing.",
+    "category": "Success"
+  },
+  {
+    "id": "seed-056",
+    "text": "Every seed I plant blossoms into extraordinary achievement and fulfillment.",
+    "category": "Success"
+  },
+  {
+    "id": "seed-057",
+    "text": "I am anchored in deep peace that flows from my innermost being.",
+    "category": "Peace"
+  },
+  {
+    "id": "seed-058",
+    "text": "My soul rests in a sanctuary of calm and divine stillness.",
+    "category": "Peace"
+  },
+  {
+    "id": "seed-059",
+    "text": "I release all tension and welcome serenity into every part of me.",
+    "category": "Peace"
+  },
+  {
+    "id": "seed-060",
+    "text": "Every breath I take deepens the tranquility within my sacred heart.",
+    "category": "Peace"
+  },
+  {
+    "id": "seed-061",
+    "text": "I am a vessel of peace and harmony radiates from my core.",
+    "category": "Peace"
+  },
+  {
+    "id": "seed-062",
+    "text": "My inner world is calm, steady, and beautifully at ease always.",
+    "category": "Peace"
+  },
+  {
+    "id": "seed-063",
+    "text": "I choose peace in every moment and it transforms my entire reality.",
+    "category": "Peace"
+  },
+  {
+    "id": "seed-064",
+    "text": "I am a boundless channel for creative energy and divine inspiration.",
+    "category": "Creativity"
+  },
+  {
+    "id": "seed-065",
+    "text": "My imagination flows freely and manifests beautiful ideas into reality.",
+    "category": "Creativity"
+  },
+  {
+    "id": "seed-066",
+    "text": "Every creative impulse I follow leads to something magnificent and new.",
+    "category": "Creativity"
+  },
+  {
+    "id": "seed-067",
+    "text": "I am inspired by the universe and my creativity knows no limits.",
+    "category": "Creativity"
+  },
+  {
+    "id": "seed-068",
+    "text": "My unique creative gifts bless the world in extraordinary and sacred ways.",
+    "category": "Creativity"
+  },
+  {
+    "id": "seed-069",
+    "text": "I trust the creative flow that moves through me with divine purpose.",
+    "category": "Creativity"
+  },
+  {
+    "id": "seed-070",
+    "text": "My soul dances with inspiration and everything I create holds deep meaning.",
+    "category": "Creativity"
+  },
+  {
+    "id": "seed-071",
+    "text": "I am bursting with vibrant energy that fuels my greatest adventures.",
+    "category": "Vitality"
+  },
+  {
+    "id": "seed-072",
+    "text": "My spirit is alive and I embrace each day with radiant enthusiasm.",
+    "category": "Vitality"
+  },
+  {
+    "id": "seed-073",
+    "text": "Every morning I awaken renewed, energized, and ready to thrive fully.",
+    "category": "Vitality"
+  },
+  {
+    "id": "seed-074",
+    "text": "I am filled with unstoppable life force energy that empowers my being.",
+    "category": "Vitality"
+  },
+  {
+    "id": "seed-075",
+    "text": "My vitality increases as I align with joy, love, and gratitude.",
+    "category": "Vitality"
+  },
+  {
+    "id": "seed-076",
+    "text": "I radiate youthful energy and my zest for life is magnetic.",
+    "category": "Vitality"
+  },
+  {
+    "id": "seed-077",
+    "text": "Every cell in my body hums with powerful and radiant life force.",
+    "category": "Vitality"
+  },
+  {
+    "id": "seed-078",
+    "text": "I am brave and my courage lights the way through every challenge.",
+    "category": "Courage"
+  },
+  {
+    "id": "seed-079",
+    "text": "My heart is fearless and I step boldly into my divine destiny.",
+    "category": "Courage"
+  },
+  {
+    "id": "seed-080",
+    "text": "I embrace the unknown with open arms and unwavering inner strength.",
+    "category": "Courage"
+  },
+  {
+    "id": "seed-081",
+    "text": "Every courageous step I take expands the boundaries of my beautiful life.",
+    "category": "Courage"
+  },
+  {
+    "id": "seed-082",
+    "text": "I am a warrior of light and my spirit rises above all fear.",
+    "category": "Courage"
+  },
+  {
+    "id": "seed-083",
+    "text": "My courage transforms obstacles into stepping stones toward my highest self.",
+    "category": "Courage"
+  },
+  {
+    "id": "seed-084",
+    "text": "I trust the universe and boldly follow the calling of my soul.",
+    "category": "Courage"
+  },
+  {
+    "id": "seed-085",
+    "text": "I am living my divine purpose and it fills me with deep joy.",
+    "category": "Purpose"
+  },
+  {
+    "id": "seed-086",
+    "text": "My life has sacred meaning and every experience serves my highest path.",
+    "category": "Purpose"
+  },
+  {
+    "id": "seed-087",
+    "text": "I am exactly where I am meant to be on my soul journey.",
+    "category": "Purpose"
+  },
+  {
+    "id": "seed-088",
+    "text": "Every talent I possess is a gift meant to serve the world.",
+    "category": "Purpose"
+  },
+  {
+    "id": "seed-089",
+    "text": "My purpose unfolds beautifully and I follow it with trust and passion.",
+    "category": "Purpose"
+  },
+  {
+    "id": "seed-090",
+    "text": "I am guided by a deep inner knowing toward my true calling.",
+    "category": "Purpose"
+  },
+  {
+    "id": "seed-091",
+    "text": "My soul mission is clear and everything I do aligns with it.",
+    "category": "Purpose"
+  },
+  {
+    "id": "seed-092",
+    "text": "I am a powerful conscious creator and my thoughts shape my reality.",
+    "category": "Manifestation"
+  },
+  {
+    "id": "seed-093",
+    "text": "Everything I desire is already making its way to me right now.",
+    "category": "Manifestation"
+  },
+  {
+    "id": "seed-094",
+    "text": "My vibration attracts miracles and blessings beyond my wildest dreams.",
+    "category": "Manifestation"
+  },
+  {
+    "id": "seed-095",
+    "text": "I align my energy with my desires and they manifest with ease.",
+    "category": "Manifestation"
+  },
+  {
+    "id": "seed-096",
+    "text": "Every intention I set is amplified by the loving power of the universe.",
+    "category": "Manifestation"
+  },
+  {
+    "id": "seed-097",
+    "text": "My manifestations flow to me in perfect divine timing and order.",
+    "category": "Manifestation"
+  },
+  {
+    "id": "seed-098",
+    "text": "I am the architect of my dream life and I build it daily.",
+    "category": "Manifestation"
+  },
+  {
+    "id": "seed-099",
+    "text": "I see my path clearly and make decisions with confident inner knowing.",
+    "category": "Clarity"
+  },
+  {
+    "id": "seed-100",
+    "text": "My mind is a crystal-clear channel for divine wisdom and truth.",
+    "category": "Clarity"
+  },
+  {
+    "id": "seed-101",
+    "text": "I release confusion and embrace the luminous clarity within my soul.",
+    "category": "Clarity"
+  },
+  {
+    "id": "seed-102",
+    "text": "Every answer I seek reveals itself to me at the perfect time.",
+    "category": "Clarity"
+  },
+  {
+    "id": "seed-103",
+    "text": "My intuition speaks clearly and I trust its sacred guidance completely.",
+    "category": "Clarity"
+  },
+  {
+    "id": "seed-104",
+    "text": "I am attuned to the truth that illuminates my highest path forward.",
+    "category": "Clarity"
+  },
+  {
+    "id": "seed-105",
+    "text": "My vision is sharp and I perceive the world with awakened clarity.",
+    "category": "Clarity"
+  }
+]
