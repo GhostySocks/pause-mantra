@@ -1,23 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   View,
   Pressable,
   StyleSheet,
   Dimensions,
+  Animated,
+  Easing,
   type ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-  runOnJS,
-} from 'react-native-reanimated';
 import { Colors, Radius } from '@/constants';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const ENTRANCE_EASING = Easing.bezier(0.16, 1, 0.3, 1);
 
 interface ModalSheetProps {
   visible: boolean;
@@ -34,46 +28,53 @@ export function ModalSheet({
   maxHeight = '80%',
   style,
 }: ModalSheetProps) {
-  const translateY = useSharedValue(SCREEN_HEIGHT);
-  const backdropOpacity = useSharedValue(0);
+  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
-      translateY.value = withTiming(0, {
-        duration: 400,
-        easing: ENTRANCE_EASING,
-      });
-      backdropOpacity.value = withTiming(1, { duration: 300 });
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 400,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
     } else {
-      translateY.value = withTiming(SCREEN_HEIGHT, {
-        duration: 300,
-        easing: Easing.ease,
-      });
-      backdropOpacity.value = withTiming(0, { duration: 200 });
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: SCREEN_HEIGHT,
+          duration: 300,
+          easing: Easing.ease,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   }, [visible]);
-
-  const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
 
   if (!visible) return null;
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Animated.View style={[styles.backdrop, backdropStyle]}>
+      <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       </Animated.View>
 
       <Animated.View
         style={[
           styles.sheetContainer,
-          { maxHeight: typeof maxHeight === 'number' ? maxHeight : undefined },
-          sheetStyle,
+          { transform: [{ translateY }] },
         ]}
       >
         <LinearGradient

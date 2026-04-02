@@ -132,7 +132,7 @@ export default function LibraryScreen() {
               </>
             ) : (
               <View style={styles.masterLocked}>
-                <Text style={{ fontSize: 28, opacity: 0.4 }}>{'\u2665'}</Text>
+                <Text style={{ fontSize: 28, opacity: 0.4 }}>{'♥'}</Text>
                 <Text style={styles.masterLockedTitle}>Heart 5 mantras to unlock</Text>
                 <Text style={styles.masterLockedBody}>
                   Your Master Mantra is synthesised from the mantras you love most.
@@ -178,7 +178,7 @@ export default function LibraryScreen() {
               </Text>
             </View>
             <Pressable onPress={() => setSelectedCategory(null)}>
-              <Text style={{ color: Colors.mauve, fontSize: 18 }}>{'\u2715'}</Text>
+              <Text style={{ color: Colors.mauve, fontSize: 18 }}>{'✕'}</Text>
             </Pressable>
           </View>
           {/* Placeholder mantra rows */}

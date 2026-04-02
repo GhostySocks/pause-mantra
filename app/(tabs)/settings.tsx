@@ -16,9 +16,9 @@ export default function SettingsScreen() {
 
   // Placeholder gated apps
   const gatedApps = [
-    { name: 'Instagram', emoji: '\uD83D\uDCF7' },
-    { name: 'TikTok', emoji: '\uD83C\uDFB5' },
-    { name: 'Twitter/X', emoji: '\uD835\uDD4F' },
+    { name: 'Instagram', emoji: '📷' },
+    { name: 'TikTok', emoji: '🎵' },
+    { name: 'Twitter/X', emoji: '𝕏' },
   ];
 
   return (
@@ -111,23 +111,23 @@ export default function SettingsScreen() {
               <Text style={styles.accountValue}>
                 {subscriptionTier === 'pro' ? 'Pro' : 'Base'} (Trial)
               </Text>
-              <Text style={styles.chevron}>{'\u203A'}</Text>
+              <Text style={styles.chevron}>{'›'}</Text>
             </View>
           </Pressable>
 
           <Pressable style={styles.accountRow}>
             <Text style={styles.accountLabel}>Privacy policy</Text>
-            <Text style={styles.chevron}>{'\u203A'}</Text>
+            <Text style={styles.chevron}>{'›'}</Text>
           </Pressable>
 
           <Pressable style={styles.accountRow}>
             <Text style={styles.accountLabel}>Export my data</Text>
-            <Text style={styles.chevron}>{'\u203A'}</Text>
+            <Text style={styles.chevron}>{'›'}</Text>
           </Pressable>
 
           <Pressable style={[styles.accountRow, { borderBottomWidth: 0 }]}>
             <Text style={[styles.accountLabel, { color: '#E57373' }]}>Delete account</Text>
-            <Text style={styles.chevron}>{'\u203A'}</Text>
+            <Text style={styles.chevron}>{'›'}</Text>
           </Pressable>
         </View>
 

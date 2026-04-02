@@ -78,7 +78,7 @@ export default function WelcomeScreen() {
           onPress={() => router.push('/(auth)/goals')}
         />
         <Text style={styles.subLabel}>
-          7-day free trial {'\u00b7'} No card required
+          7-day free trial {'·'} No card required
         </Text>
       </View>
     </GradientBackground>

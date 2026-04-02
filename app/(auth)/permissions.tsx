@@ -12,17 +12,17 @@ interface PermissionStep {
 }
 
 const IOS_STEPS: PermissionStep[] = [
-  { emoji: '\u2699\uFE0F', title: 'Allow notifications', body: "We'll open notification settings for you." },
-  { emoji: '\uD83D\uDD14', title: 'Tap Allow', body: 'When iOS asks to send notifications, tap Allow.' },
-  { emoji: '\uD83D\uDD14', title: 'Enable banners', body: 'Make sure banner style is set to Persistent so the gate prompt stays visible.' },
-  { emoji: '\u21A9\uFE0F', title: 'Come back to Pause Mantra', body: "We'll confirm it worked automatically." },
+  { emoji: '⚙️', title: 'Allow notifications', body: "We'll open notification settings for you." },
+  { emoji: '🔔', title: 'Tap Allow', body: 'When iOS asks to send notifications, tap Allow.' },
+  { emoji: '🔔', title: 'Enable banners', body: 'Make sure banner style is set to Persistent so the gate prompt stays visible.' },
+  { emoji: '↩️', title: 'Come back to Pause Mantra', body: "We'll confirm it worked automatically." },
 ];
 
 const ANDROID_STEPS: PermissionStep[] = [
-  { emoji: '\u267F', title: 'Enable Accessibility access', body: "We'll open Settings \u2192 Accessibility \u2192 Pause Mantra. Toggle it on." },
-  { emoji: '\uD83D\uDCF1', title: 'Allow Usage access', body: 'Settings \u2192 Apps \u2192 Special App Access \u2192 Usage Access \u2192 Pause Mantra. Toggle on.' },
-  { emoji: '\uD83D\uDD0B', title: 'Disable battery optimisation', body: "Settings \u2192 Battery \u2192 Pause Mantra \u2192 Don't optimise. Keeps the gate reliable." },
-  { emoji: '\u21A9\uFE0F', title: "Come back and tap 'I've done it'", body: "We'll verify everything is working." },
+  { emoji: '♿', title: 'Enable Accessibility access', body: "We'll open Settings → Accessibility → Pause Mantra. Toggle it on." },
+  { emoji: '📱', title: 'Allow Usage access', body: 'Settings → Apps → Special App Access → Usage Access → Pause Mantra. Toggle on.' },
+  { emoji: '🔋', title: 'Disable battery optimisation', body: "Settings → Battery → Pause Mantra → Don't optimise. Keeps the gate reliable." },
+  { emoji: '↩️', title: "Come back and tap 'I've done it'", body: "We'll verify everything is working." },
 ];
 
 export default function PermissionsScreen() {
@@ -42,16 +42,11 @@ export default function PermissionsScreen() {
         await Linking.openSettings();
       }
       setSettingsOpened(true);
-      // Simulate all steps done for alpha (in production, verify via native modules)
-      setTimeout(() => {
-        setCompletedSteps(steps.map((_, i) => i));
-      }, 2000);
     } catch {
-      // Fallback: open general settings
-      await Linking.openSettings();
+      // Fallback: just mark as opened for alpha
       setSettingsOpened(true);
     }
-  }, [steps]);
+  }, []);
 
   const handleContinue = useCallback(() => {
     router.push('/(auth)/paywall');
@@ -79,7 +74,7 @@ export default function PermissionsScreen() {
                 <View style={styles.stepRow}>
                   <View style={[styles.stepIconCircle, isDone && styles.stepIconDone]}>
                     {isDone ? (
-                      <Text style={styles.checkmark}>{'\u2713'}</Text>
+                      <Text style={styles.checkmark}>{'✓'}</Text>
                     ) : (
                       <Text style={styles.stepEmoji}>{step.emoji}</Text>
                     )}
@@ -99,12 +94,12 @@ export default function PermissionsScreen() {
         <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 44 }]}>
           {allDone ? (
             <PillButton
-              label="Permission granted \u2713"
+              label="Permission granted ✓"
               onPress={handleContinue}
             />
           ) : settingsOpened && Platform.OS === 'android' ? (
             <PillButton
-              label="I've done it \u2713"
+              label="I've done it ✓"
               onPress={() => {
                 setCompletedSteps(steps.map((_, i) => i));
                 setTimeout(handleContinue, 500);
@@ -112,7 +107,7 @@ export default function PermissionsScreen() {
             />
           ) : (
             <PillButton
-              label="Open Settings \u2192"
+              label="Open Settings →"
               onPress={openSettings}
             />
           )}

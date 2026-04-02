@@ -1,14 +1,5 @@
-import { StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  withDelay,
-  withSequence,
-  Easing,
-} from 'react-native-reanimated';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Easing } from 'react-native';
 
 interface PulseRingsProps {
   outerSize?: number;
@@ -27,71 +18,52 @@ export function PulseRings({
   duration = 5000,
   innerDelay = 800,
 }: PulseRingsProps) {
-  const outerScale = useSharedValue(1);
-  const outerOpacity = useSharedValue(0.4);
-  const innerScale = useSharedValue(1);
-  const innerOpacity = useSharedValue(0.4);
-  const fadeIn = useSharedValue(0);
+  const fadeIn = useRef(new Animated.Value(0)).current;
+  const outerScale = useRef(new Animated.Value(1)).current;
+  const outerOpacity = useRef(new Animated.Value(0.4)).current;
+  const innerScale = useRef(new Animated.Value(1)).current;
+  const innerOpacity = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
-    // Fade in the rings
-    fadeIn.value = withDelay(
-      200,
-      withTiming(1, { duration: 1200, easing: Easing.ease })
-    );
+    // Fade in
+    Animated.timing(fadeIn, {
+      toValue: 1,
+      duration: 1200,
+      delay: 200,
+      easing: Easing.ease,
+      useNativeDriver: true,
+    }).start();
 
-    // Breathe animation — outer
-    outerScale.value = withRepeat(
-      withSequence(
-        withTiming(1.1, { duration: duration / 2, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: duration / 2, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      false
-    );
-    outerOpacity.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: duration / 2, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.4, { duration: duration / 2, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      false
-    );
+    // Outer breathe
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(outerScale, { toValue: 1.1, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(outerOpacity, { toValue: 1, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(outerScale, { toValue: 1, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(outerOpacity, { toValue: 0.4, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        ]),
+      ])
+    ).start();
 
-    // Breathe animation — inner (delayed)
-    innerScale.value = withDelay(
-      innerDelay,
-      withRepeat(
-        withSequence(
-          withTiming(1.1, { duration: duration / 2, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1, { duration: duration / 2, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        false
-      )
-    );
-    innerOpacity.value = withDelay(
-      innerDelay,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: duration / 2, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.4, { duration: duration / 2, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        false
-      )
-    );
+    // Inner breathe (delayed)
+    setTimeout(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.parallel([
+            Animated.timing(innerScale, { toValue: 1.1, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+            Animated.timing(innerOpacity, { toValue: 1, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          ]),
+          Animated.parallel([
+            Animated.timing(innerScale, { toValue: 1, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+            Animated.timing(innerOpacity, { toValue: 0.4, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          ]),
+        ])
+      ).start();
+    }, innerDelay);
   }, []);
-
-  const outerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: outerScale.value }],
-    opacity: outerOpacity.value * fadeIn.value,
-  }));
-
-  const innerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: innerScale.value }],
-    opacity: innerOpacity.value * fadeIn.value,
-  }));
 
   return (
     <>
@@ -103,8 +75,9 @@ export function PulseRings({
             height: outerSize,
             borderRadius: outerSize / 2,
             borderColor: outerColor,
+            opacity: Animated.multiply(outerOpacity, fadeIn),
+            transform: [{ scale: outerScale }],
           },
-          outerAnimatedStyle,
         ]}
         pointerEvents="none"
       />
@@ -116,8 +89,9 @@ export function PulseRings({
             height: innerSize,
             borderRadius: innerSize / 2,
             borderColor: innerColor,
+            opacity: Animated.multiply(innerOpacity, fadeIn),
+            transform: [{ scale: innerScale }],
           },
-          innerAnimatedStyle,
         ]}
         pointerEvents="none"
       />

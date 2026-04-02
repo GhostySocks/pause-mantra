@@ -14,12 +14,12 @@ const BASE_FEATURES = [
   'Full 10,000+ mantra library',
   'Heart button + Liked Mantras gallery',
   'Gate log & reflection notes',
-  'Streak \u2014 this month & last month',
+  'Streak — this month & last month',
 ];
 
 const PRO_EXTRA_FEATURES = [
   'Master Mantra AI synthesis',
-  'Full streak history \u2014 all time',
+  'Full streak history — all time',
   'Reflection prompts on gate screen',
 ];
 
@@ -95,7 +95,7 @@ export default function PaywallScreen() {
             style={[styles.tierTab, selectedTier === 'pro' && styles.tierTabActive]}
           >
             <Text style={[styles.tierTabText, selectedTier === 'pro' && styles.tierTabTextActive]}>
-              Pro {'\u2726'}
+              Pro {'✦'}
             </Text>
           </Pressable>
         </View>
@@ -123,7 +123,7 @@ export default function PaywallScreen() {
                     <Text style={styles.planLabel}>{plan.label}</Text>
                     <Text style={[styles.planPrice, isSelected && styles.planPriceSelected]}>
                       {plan.price}
-                      {plan.subLabel ? ` \u00b7 ${plan.subLabel}` : ''}
+                      {plan.subLabel ? ` · ${plan.subLabel}` : ''}
                     </Text>
                   </View>
                 </View>
@@ -170,7 +170,7 @@ export default function PaywallScreen() {
           textStyle={{ fontWeight: '600' }}
         />
         <Text style={styles.subLabel}>
-          Then {selectedPricing?.display ?? ''} {'\u00b7'} Cancel anytime {'\u00b7'} Restore purchases
+          Then {selectedPricing?.display ?? ''} {'·'} Cancel anytime {'·'} Restore purchases
         </Text>
       </View>
     </GradientBackground>

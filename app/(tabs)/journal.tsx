@@ -79,14 +79,14 @@ export default function JournalScreen() {
               if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
               else setViewMonth(viewMonth - 1);
             }}>
-              <Text style={styles.calendarNav}>{'\u2039'}</Text>
+              <Text style={styles.calendarNav}>{'‹'}</Text>
             </Pressable>
             <Text style={styles.calendarMonth}>{monthLabel}</Text>
             <Pressable onPress={() => {
               if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
               else setViewMonth(viewMonth + 1);
             }}>
-              <Text style={styles.calendarNav}>{'\u203A'}</Text>
+              <Text style={styles.calendarNav}>{'›'}</Text>
             </Pressable>
           </View>
 
@@ -160,10 +160,10 @@ export default function JournalScreen() {
         <View style={styles.noteModalContent}>
           <View style={styles.noteModalHeader}>
             <Text style={styles.noteModalTitle}>
-              {RECENT_GATES.find((g) => g.id === noteModal)?.app ?? ''} {'\u00b7'} {RECENT_GATES.find((g) => g.id === noteModal)?.time ?? ''}
+              {RECENT_GATES.find((g) => g.id === noteModal)?.app ?? ''} {'·'} {RECENT_GATES.find((g) => g.id === noteModal)?.time ?? ''}
             </Text>
             <Pressable onPress={() => setNoteModal(null)}>
-              <Text style={{ color: Colors.mauve, fontSize: 18 }}>{'\u2715'}</Text>
+              <Text style={{ color: Colors.mauve, fontSize: 18 }}>{'✕'}</Text>
             </Pressable>
           </View>
           <Text style={styles.notePrompt}>A thought before you go...</Text>

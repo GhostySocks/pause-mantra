@@ -1,15 +1,6 @@
-import { Pressable, Text, StyleSheet, type ViewStyle, type TextStyle } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-  withDelay,
-  Easing,
-} from 'react-native-reanimated';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { Pressable, Text, Animated, StyleSheet, Easing, type ViewStyle, type TextStyle } from 'react-native';
 import { Colors, Fonts, FontSizes, Radius } from '@/constants';
-
-const ENTRANCE_EASING = Easing.bezier(0.16, 1, 0.3, 1);
 
 interface PillButtonProps {
   label: string;
@@ -24,8 +15,6 @@ interface PillButtonProps {
   textColor?: string;
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export function PillButton({
   label,
   onPress,
@@ -38,26 +27,29 @@ export function PillButton({
   color,
   textColor,
 }: PillButtonProps) {
-  const scale = useSharedValue(animate ? 0.82 : 1);
-  const opacity = useSharedValue(animate ? 0 : 1);
+  const scale = useRef(new Animated.Value(animate ? 0.82 : 1)).current;
+  const opacity = useRef(new Animated.Value(animate ? 0 : 1)).current;
 
   useEffect(() => {
     if (animate) {
-      scale.value = withDelay(
-        animationDelay,
-        withTiming(1, { duration: 900, easing: ENTRANCE_EASING })
-      );
-      opacity.value = withDelay(
-        animationDelay,
-        withTiming(1, { duration: 900, easing: ENTRANCE_EASING })
-      );
+      Animated.parallel([
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 900,
+          delay: animationDelay,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 900,
+          delay: animationDelay,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   }, [animate, animationDelay]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
 
   const isSolid = variant === 'solid';
   const bgColor = disabled
@@ -69,30 +61,25 @@ export function PillButton({
     : textColor ?? (isSolid ? Colors.tealDark : Colors.ghostText);
 
   return (
-    <AnimatedPressable
-      onPress={onPress}
-      disabled={disabled}
-      style={[
-        styles.pill,
-        {
-          backgroundColor: bgColor,
-          borderColor: borderColor,
-          borderWidth: isSolid ? 0 : 1,
-        },
-        animatedStyle,
-        style,
-      ]}
-    >
-      <Text
+    <Animated.View style={{ transform: [{ scale }], opacity }}>
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
         style={[
-          styles.label,
-          { color: txtColor },
-          textStyle,
+          styles.pill,
+          {
+            backgroundColor: bgColor,
+            borderColor: borderColor,
+            borderWidth: isSolid ? 0 : 1,
+          },
+          style,
         ]}
       >
-        {label}
-      </Text>
-    </AnimatedPressable>
+        <Text style={[styles.label, { color: txtColor }, textStyle]}>
+          {label}
+        </Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
