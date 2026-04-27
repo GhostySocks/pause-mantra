@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet, Easing } from 'react-native';
-import { PulseRings } from '@/components/ui';
+import { PulseRings, StarField } from '@/components/ui';
 import { HeartButton } from '@/components/HeartButton';
 import { Colors, Fonts, FontSizes, Spacing, Radius } from '@/constants';
 import { useSettingsStore } from '@/lib/store';
@@ -76,6 +76,7 @@ export function GateScreen({ appName, appEmoji, mantraText, mantraId, onEnter, o
 
   return (
     <View style={styles.container}>
+      <StarField />
       <View style={styles.appLabel}>
         <View style={styles.appIconSmall}><Text style={{ fontSize: 16 }}>{appEmoji}</Text></View>
         <Text style={styles.appName}>{appName}</Text>

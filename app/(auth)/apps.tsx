@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, FlatList } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { GradientBackground, PillButton, ProgressBar } from '@/components/ui';
 import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius } from '@/constants';
 import { SUGGESTED_APPS, type SuggestedApp } from '@/constants/apps';
-import { useOnboardingStore } from '@/lib/store';
+import { useOnboardingStore, useAuthStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 
 export default function AppsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const isFromSettings = from === 'settings';
   const { selectedApps, toggleApp } = useOnboardingStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
@@ -24,12 +27,12 @@ export default function AppsScreen() {
     selectedApps.some((a) => a.name === app.name);
 
   return (
-    <GradientBackground>
+    <GradientBackground showStars={false}>
       <View style={[styles.container, { paddingTop: insets.top + 48 }]}>
-        <ProgressBar currentStep={2} />
+        {!isFromSettings && <ProgressBar currentStep={2} />}
 
         <Text style={styles.headline}>
-          Which apps steal your time?
+          {isFromSettings ? 'Update your\ngated apps' : 'Which apps steal\nyour time?'}
         </Text>
 
         <Text style={styles.subtitle}>
@@ -107,8 +110,29 @@ export default function AppsScreen() {
             </Text>
           </View>
           <PillButton
-            label="Continue"
-            onPress={() => router.push('/(auth)/demo')}
+            label={isFromSettings ? 'Save' : 'Continue'}
+            onPress={async () => {
+              if (isFromSettings) {
+                const { userId } = useAuthStore.getState();
+                if (userId) {
+                  // Replace all gated apps in Supabase
+                  await supabase.from('user_gated_apps').delete().eq('user_id', userId);
+                  if (selectedApps.length > 0) {
+                    await supabase.from('user_gated_apps').insert(
+                      selectedApps.map((app) => ({
+                        user_id: userId,
+                        app_name: app.name,
+                        bundle_id: app.bundleId || null,
+                        package_name: app.packageName || null,
+                      }))
+                    );
+                  }
+                }
+                router.back();
+              } else {
+                router.push('/(auth)/demo');
+              }
+            }}
             disabled={!hasSelection}
           />
         </View>

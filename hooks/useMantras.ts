@@ -3,43 +3,50 @@ import {
   getRandomMantra,
   getMantrasByCategory,
   markMantraAsSeen,
-  seedMantras,
+  syncMantrasFromSupabase,
   getMantraCountByCategory,
 } from '@/lib/sqlite';
 import type { Mantra } from '@/types';
 
-// Load and seed mantras on first use
-let seeded = false;
+// Sync mantras from Supabase on first use
+let synced = false;
 
-async function ensureSeeded() {
-  if (seeded) return;
+async function ensureSynced(): Promise<void> {
+  if (synced) return;
   try {
-    const mantrasJson = require('@/assets/mantras.json');
-    await seedMantras(mantrasJson);
-    seeded = true;
+    await syncMantrasFromSupabase();
+    synced = true;
   } catch (e) {
-    console.warn('Failed to seed mantras:', e);
+    console.warn('Failed to sync mantras:', e);
   }
 }
 
+// Keep the current mantra stable across re-mounts (tab switches)
+let cachedMantra: Mantra | null = null;
+
 export function useRandomMantra(categories?: string[]) {
-  const [mantra, setMantra] = useState<Mantra | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [mantra, setMantra] = useState<Mantra | null>(cachedMantra);
+  const [loading, setLoading] = useState(false);
 
   const fetchNext = useCallback(async () => {
     setLoading(true);
-    await ensureSeeded();
+    await ensureSynced();
     const result = await getRandomMantra(categories);
     if (result) {
-      setMantra(result as Mantra);
+      const m = result as Mantra;
+      cachedMantra = m;
+      setMantra(m);
       await markMantraAsSeen(result.id);
     }
     setLoading(false);
   }, [categories]);
 
+  // Only fetch on very first use (no cached mantra yet)
   useEffect(() => {
-    fetchNext();
-  }, [fetchNext]);
+    if (!cachedMantra) {
+      fetchNext();
+    }
+  }, []);
 
   return { mantra, loading, fetchNext };
 }
@@ -52,7 +59,7 @@ export function useCategoryMantras(category: string, limit = 20) {
 
   const fetch = useCallback(async (newOffset = 0) => {
     setLoading(true);
-    await ensureSeeded();
+    await ensureSynced();
     const results = await getMantrasByCategory(category, limit, newOffset);
     if (newOffset === 0) {
       setMantras(results as Mantra[]);
@@ -82,7 +89,7 @@ export function useCategoryCounts() {
 
   useEffect(() => {
     (async () => {
-      await ensureSeeded();
+      await ensureSynced();
       const result = await getMantraCountByCategory();
       setCounts(result);
     })();

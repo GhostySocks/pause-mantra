@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -7,6 +7,7 @@ import { GradientBackground, PillButton, ProgressBar } from '@/components/ui';
 import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius } from '@/constants';
 import { PRODUCTS, PRICING } from '@/lib/revenuecat';
 import { useOnboardingStore, useAuthStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 import type { SubscriptionTier } from '@/types';
 
 const BASE_FEATURES = [
@@ -14,12 +15,12 @@ const BASE_FEATURES = [
   'Full 10,000+ mantra library',
   'Heart button + Liked Mantras gallery',
   'Gate log & reflection notes',
-  'Streak — this month & last month',
+  'Streak: this month & last month',
 ];
 
 const PRO_EXTRA_FEATURES = [
   'Master Mantra AI synthesis',
-  'Full streak history — all time',
+  'Full streak history, all time',
   'Reflection prompts on gate screen',
 ];
 
@@ -55,16 +56,74 @@ export default function PaywallScreen() {
 
   const selectedPricing = PRICING[selectedPlan as keyof typeof PRICING];
 
-  const handleSubscribe = () => {
-    // TODO: RevenueCat purchase flow
-    // For alpha, simulate successful subscription
-    setAuth('demo-user-id', 'Sarah');
-    setSubscription('trial', selectedTier);
-    router.replace('/(tabs)');
+  const [saving, setSaving] = useState(false);
+
+  const handleSubscribe = async (): Promise<void> => {
+    const { userId } = useAuthStore.getState();
+    if (!userId) {
+      Alert.alert('Error', 'No user session found. Please restart the app.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Save name and goals to Supabase
+      const { selectedGoals, selectedApps, userName } = useOnboardingStore.getState();
+
+      // Save name to user metadata
+      if (userName.trim()) {
+        await supabase.auth.updateUser({ data: { name: userName.trim() } });
+        useAuthStore.getState().setAuth(userId, userName.trim());
+      }
+
+      if (selectedGoals.length > 0) {
+        const goalRows = selectedGoals.map((goal) => ({
+          user_id: userId,
+          goal,
+        }));
+        const { error: goalsError } = await supabase
+          .from('user_goals')
+          .insert(goalRows);
+        if (goalsError) console.error('Failed to save goals:', goalsError.message);
+      }
+
+      // Save gated apps to Supabase
+      if (selectedApps.length > 0) {
+        const appRows = selectedApps.map((app) => ({
+          user_id: userId,
+          app_name: app.name,
+          bundle_id: app.bundleId || null,
+          package_name: app.packageName || null,
+        }));
+        const { error: appsError } = await supabase
+          .from('user_gated_apps')
+          .insert(appRows);
+        if (appsError) console.error('Failed to save apps:', appsError.message);
+      }
+
+      // Create user_settings row
+      const { error: settingsError } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: userId,
+          subscription_status: 'trial',
+        });
+      if (settingsError) console.error('Failed to save settings:', settingsError.message);
+
+      // TODO: RevenueCat purchase flow
+      // For alpha, simulate successful subscription
+      setSubscription('trial', selectedTier);
+      router.replace('/(tabs)');
+    } catch (err) {
+      console.error('Onboarding save failed:', err);
+      Alert.alert('Something went wrong', 'Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <GradientBackground>
+    <GradientBackground showStars={false}>
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 48 }]}
         showsVerticalScrollIndicator={false}
@@ -165,12 +224,15 @@ export default function PaywallScreen() {
       {/* Bottom CTA */}
       <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 36 }]}>
         <PillButton
-          label="Start 7-day free trial"
+          label={saving ? 'Setting up...' : 'Start 7-day free trial'}
           onPress={handleSubscribe}
+          disabled={saving}
           textStyle={{ fontWeight: '600' }}
         />
         <Text style={styles.subLabel}>
-          Then {selectedPricing?.display ?? ''} {'·'} Cancel anytime {'·'} Restore purchases
+          {selectedPlan === PRODUCTS.PRO_LIFETIME
+            ? 'Lifetime access · Never pay again'
+            : `Then ${selectedPricing?.display ?? ''} · Cancel anytime · Restore purchases`}
         </Text>
       </View>
     </GradientBackground>
@@ -180,7 +242,7 @@ export default function PaywallScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.xl,
-    paddingBottom: 120,
+    paddingBottom: 220,
   },
   eyebrow: {
     fontFamily: Fonts.cormorant.regular,

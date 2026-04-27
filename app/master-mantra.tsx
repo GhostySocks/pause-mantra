@@ -7,7 +7,7 @@ import { GradientBackground, PulseRings } from '@/components/ui';
 import { Colors, Fonts, FontSizes, LetterSpacing, Spacing, Radius } from '@/constants';
 import { useAuthStore, useSettingsStore } from '@/lib/store';
 
-const PLACEHOLDER_MASTER = 'I am abundant, present and deeply connected to my own power — moving through life with ease, intention and grace.';
+const PLACEHOLDER_MASTER = 'I am abundant, present and deeply connected to my own power, moving through life with ease, intention and grace.';
 
 const HISTORY = [
   { text: 'I attract what I need and release what no longer serves me.', date: '2 weeks ago', likes: 28 },
@@ -93,7 +93,7 @@ export default function MasterMantraScreen() {
         </View>
 
         <View style={styles.mantraArea}>
-          <PulseRings outerSize={240} innerSize={190} outerColor="rgba(126,200,192,0.1)" innerColor="rgba(126,200,192,0.06)" duration={6000} innerDelay={1000} />
+          <PulseRings outerSize={240} innerSize={190} outerColor="rgba(126,200,192,0.25)" innerColor="rgba(126,200,192,0.15)" duration={6000} innerDelay={1000} />
           {isGenerating ? (
             <View style={styles.generatingState}>
               <View style={styles.dotsRow}>

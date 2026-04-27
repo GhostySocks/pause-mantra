@@ -22,12 +22,12 @@ interface TooltipDef {
 
 const TOOLTIPS: TooltipDef[] = [
   { text: "This is your Pause Mantra gate. Every time you open a gated app, you'll see this screen first.", button: 'Got it', position: 'center' },
-  { text: "This is today's mantra. Read it — really read it — before you continue.", button: "I've read it", position: 'upper' },
+  { text: "This is today's mantra. Read it, really read it, before you continue.", button: "I've read it", position: 'upper' },
   { text: 'Tap the heart to save a mantra you love. They build up in your Library.', button: 'Tap the heart ♥', position: 'heart' },
-  { text: 'Now say the mantra out loud — three times. Tap the button each time.', button: 'I said this once →', position: 'above-cta' },
+  { text: 'Now say the mantra out loud, three times. Tap the button each time.', button: 'I said this once →', position: 'above-cta' },
   { text: 'Again. Say it like you mean it.', button: 'I said this again →', position: 'above-cta' },
   { text: 'One more time. Feel it land.', button: 'I said this three times →', position: 'above-cta' },
-  { text: 'Now choose — keep scrolling intentionally, or put the phone down.', button: 'Continue setup →', position: 'above-cta' },
+  { text: 'Now choose. Keep scrolling intentionally, or put the phone down.', button: 'Continue setup →', position: 'above-cta' },
 ];
 
 function FadeInView({ children, step }: { children: React.ReactNode; step: number }) {
@@ -74,7 +74,7 @@ export default function GateDemoScreen() {
   };
 
   return (
-    <GradientBackground>
+    <GradientBackground showStars={false}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.demoHeader}>
           <Text style={styles.stepLabel}>STEP 3 OF 5</Text>
@@ -86,16 +86,18 @@ export default function GateDemoScreen() {
             <View style={[styles.appIconSmall, { backgroundColor: '#E1306C' }]}>
               <Text style={{ fontSize: 12 }}>📷</Text>
             </View>
-            <Text style={styles.appName}>Instagram</Text>
+            <View>
+              <Text style={styles.appBlockingLabel}>GATING</Text>
+              <Text style={styles.appName}>Instagram</Text>
+            </View>
           </View>
 
           <View style={styles.heartContainer}>
             <HeartButton filled={heartFilled} onPress={handleHeartTap} color={Colors.teal} />
           </View>
 
-          <PulseRings outerSize={260} innerSize={200} outerColor={Colors.pulseRingOuter} innerColor={Colors.pulseRingInner} />
-
           <View style={styles.mantraArea}>
+            <PulseRings outerSize={280} innerSize={220} outerColor="rgba(126,200,192,0.25)" innerColor="rgba(126,200,192,0.15)" />
             <Text style={styles.mantraLabel}>TODAY'S MANTRA</Text>
             <Text style={styles.mantraText}>{DEMO_MANTRA}</Text>
             <View style={styles.progressDots}>
@@ -150,14 +152,15 @@ const styles = StyleSheet.create({
   demoHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: 12, paddingBottom: 8, zIndex: 10 },
   stepLabel: { fontFamily: Fonts.inter.regular, fontSize: FontSizes.caption, letterSpacing: 2, color: Colors.teal },
   demoBadge: { fontFamily: Fonts.inter.regular, fontSize: FontSizes.caption, color: 'rgba(196,168,224,0.5)' },
-  gateContent: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  gateContent: { flex: 1, alignItems: 'center', paddingTop: 60, paddingBottom: 160 },
   appLabel: { position: 'absolute', top: 20, left: 24, flexDirection: 'row', alignItems: 'center', gap: 8 },
   appIconSmall: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  appBlockingLabel: { fontFamily: Fonts.inter.regular, fontSize: 9, letterSpacing: 1.5, color: Colors.teal, textTransform: 'uppercase', marginBottom: 1 },
   appName: { fontFamily: Fonts.inter.regular, fontSize: FontSizes.caption, color: Colors.lavender },
   heartContainer: { position: 'absolute', top: 20, right: 16, zIndex: 5 },
-  mantraArea: { alignItems: 'center', paddingHorizontal: 32, zIndex: 1 },
+  mantraArea: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, zIndex: 1 },
   mantraLabel: { fontFamily: Fonts.inter.regular, fontSize: FontSizes.micro, letterSpacing: 2, color: Colors.teal, marginBottom: 16, textTransform: 'uppercase' },
-  mantraText: { fontFamily: Fonts.cormorant.italic, fontSize: FontSizes.mantraGate, color: Colors.cream, textAlign: 'center', lineHeight: FontSizes.mantraGate * 1.55 },
+  mantraText: { fontFamily: Fonts.cormorant.italic, fontSize: 38, color: Colors.cream, textAlign: 'center', lineHeight: 38 * 1.5 },
   progressDots: { flexDirection: 'row', gap: 8, marginTop: 24 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   buttonArea: { position: 'absolute', bottom: 80, left: 28, right: 28, gap: 12 },

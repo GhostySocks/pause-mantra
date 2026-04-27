@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { View, Text, Platform, StyleSheet, Linking } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, Platform, StyleSheet, Linking, ScrollView } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GradientBackground, PillButton, ProgressBar } from '@/components/ui';
 import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing } from '@/constants';
@@ -28,6 +28,8 @@ const ANDROID_STEPS: PermissionStep[] = [
 export default function PermissionsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const isFromSettings = from === 'settings';
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [settingsOpened, setSettingsOpened] = useState(false);
 
@@ -49,22 +51,26 @@ export default function PermissionsScreen() {
   }, []);
 
   const handleContinue = useCallback(() => {
-    router.push('/(auth)/paywall');
-  }, [router]);
+    if (isFromSettings) {
+      router.back();
+    } else {
+      router.push('/(auth)/paywall');
+    }
+  }, [router, isFromSettings]);
 
   return (
-    <GradientBackground>
+    <GradientBackground showStars={false}>
       <View style={[styles.container, { paddingTop: insets.top + 48 }]}>
-        <ProgressBar currentStep={4} />
+        {!isFromSettings && <ProgressBar currentStep={4} />}
 
-        <Text style={styles.headline}>One quick setup.</Text>
+        <Text style={styles.headline}>{isFromSettings ? 'Check your permissions.' : 'One quick setup.'}</Text>
 
         <Text style={styles.subtitle}>
-          We'll open Settings for you. Follow these steps, then come straight back.
+          These permissions let Pause Mantra step in when you open a gated app, so your mantra appears before you start scrolling.
         </Text>
 
         {/* Step list */}
-        <View style={styles.stepList}>
+        <ScrollView style={styles.stepList} showsVerticalScrollIndicator={false}>
           {steps.map((step, index) => {
             const isDone = completedSteps.includes(index);
             const isLast = index === steps.length - 1;
@@ -88,30 +94,41 @@ export default function PermissionsScreen() {
               </View>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* Bottom section */}
         <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 44 }]}>
           {allDone ? (
             <PillButton
-              label="Permission granted ✓"
+              label="Continue"
               onPress={handleContinue}
             />
-          ) : settingsOpened && Platform.OS === 'android' ? (
-            <PillButton
-              label="I've done it ✓"
-              onPress={() => {
-                setCompletedSteps(steps.map((_, i) => i));
-                setTimeout(handleContinue, 500);
-              }}
-            />
           ) : (
-            <PillButton
-              label="Open Settings →"
-              onPress={openSettings}
-            />
+            <>
+              {settingsOpened ? (
+                <>
+                  <PillButton
+                    label="Open Settings again →"
+                    onPress={openSettings}
+                    variant="ghost"
+                  />
+                  <PillButton
+                    label="I've done it ✓"
+                    onPress={() => {
+                      setCompletedSteps(steps.map((_, i) => i));
+                    }}
+                    style={{ marginTop: 10 }}
+                  />
+                </>
+              ) : (
+                <PillButton
+                  label="Open Settings →"
+                  onPress={openSettings}
+                />
+              )}
+            </>
           )}
-          <Text style={styles.footer}>Takes about 30 seconds</Text>
+          {!settingsOpened && <Text style={styles.footer}>Takes about 30 seconds</Text>}
         </View>
       </View>
     </GradientBackground>

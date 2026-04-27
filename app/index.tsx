@@ -5,10 +5,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { GradientBackground, PulseRings, LockIcon } from '@/components/ui';
 import { Colors, Fonts, FontSizes, LetterSpacing } from '@/constants';
 import { useAuthStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 
 export default function SplashScreenRoute() {
   const router = useRouter();
-  const { isAuthenticated, subscriptionStatus } = useAuthStore();
+  const { setAuth } = useAuthStore();
 
   const lockScale = useRef(new Animated.Value(0.6)).current;
   const lockOpacity = useRef(new Animated.Value(0)).current;
@@ -40,11 +41,63 @@ export default function SplashScreenRoute() {
       Animated.timing(taglineOpacity, { toValue: 1, duration: 600, delay: 1050, easing, useNativeDriver: true }),
     ]).start();
 
-    // Navigate after ~1.8s
-    const timeout = setTimeout(() => {
-      if (!isAuthenticated) {
+    // Check for existing session or create anonymous one, then navigate
+    const timeout = setTimeout(async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          // Existing session — restore auth state
+          setAuth(session.user.id, session.user.user_metadata?.name ?? null);
+        } else {
+          // No session — sign in anonymously
+          const { data, error } = await supabase.auth.signInAnonymously();
+          if (error) {
+            console.error('Anonymous sign-in failed:', error.message);
+          } else if (data.user) {
+            setAuth(data.user.id, null);
+          }
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+      }
+
+      // Route based on auth state
+      const state = useAuthStore.getState();
+      if (!state.isAuthenticated) {
         router.replace('/(auth)/welcome');
-      } else if (subscriptionStatus === 'paused') {
+        return;
+      }
+
+      // Log daily app open for streak tracking
+      const todayStr = new Date().toISOString().split('T')[0];
+      const { data: existingOpen } = await supabase
+        .from('gate_events')
+        .select('id')
+        .eq('user_id', state.userId)
+        .eq('app_name', 'app_open')
+        .gte('created_at', todayStr + 'T00:00:00')
+        .limit(1);
+
+      if (!existingOpen || existingOpen.length === 0) {
+        await supabase.from('gate_events').insert({
+          user_id: state.userId,
+          app_name: 'app_open',
+          outcome: 'entered',
+        });
+      }
+
+      // Check if user has completed onboarding (has saved goals)
+      const { data: goals } = await supabase
+        .from('user_goals')
+        .select('id')
+        .eq('user_id', state.userId)
+        .limit(1);
+
+      if (!goals || goals.length === 0) {
+        // New user — send through onboarding
+        router.replace('/(auth)/welcome');
+      } else if (state.subscriptionStatus === 'paused') {
         router.replace('/paused');
       } else {
         router.replace('/(tabs)');
@@ -60,8 +113,8 @@ export default function SplashScreenRoute() {
         <PulseRings
           outerSize={260}
           innerSize={200}
-          outerColor={Colors.splashRingOuter}
-          innerColor={Colors.splashRingInner}
+          outerColor="rgba(126,200,192,0.25)"
+          innerColor="rgba(126,200,192,0.15)"
           duration={5000}
           innerDelay={800}
         />

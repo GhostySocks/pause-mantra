@@ -1,23 +1,26 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GradientBackground, PillButton, ProgressBar } from '@/components/ui';
 import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius, MANTRA_CATEGORIES } from '@/constants';
-import { useOnboardingStore } from '@/lib/store';
+import { useOnboardingStore, useAuthStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 
 export default function GoalsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const isFromSettings = from === 'settings';
   const { selectedGoals, toggleGoal } = useOnboardingStore();
   const hasSelection = selectedGoals.length > 0;
 
   return (
-    <GradientBackground>
+    <GradientBackground showStars={false}>
       <View style={[styles.container, { paddingTop: insets.top + 48 }]}>
-        <ProgressBar currentStep={1} />
+        {!isFromSettings && <ProgressBar currentStep={1} />}
 
         <Text style={styles.headline}>
-          What do you want more of?
+          {isFromSettings ? 'Update your\ninterests' : 'What do you want\nmore of?'}
         </Text>
 
         <Text style={styles.subtitle}>
@@ -55,8 +58,23 @@ export default function GoalsScreen() {
 
         <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 44 }]}>
           <PillButton
-            label="Continue"
-            onPress={() => router.push('/(auth)/apps')}
+            label={isFromSettings ? 'Save' : 'Continue'}
+            onPress={async () => {
+              if (isFromSettings) {
+                const { userId } = useAuthStore.getState();
+                if (userId) {
+                  await supabase.from('user_goals').delete().eq('user_id', userId);
+                  if (selectedGoals.length > 0) {
+                    await supabase.from('user_goals').insert(
+                      selectedGoals.map((goal) => ({ user_id: userId, goal }))
+                    );
+                  }
+                }
+                router.back();
+              } else {
+                router.push('/(auth)/apps');
+              }
+            }}
             disabled={!hasSelection}
           />
         </View>

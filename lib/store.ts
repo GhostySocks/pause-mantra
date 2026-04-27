@@ -10,7 +10,7 @@ interface AuthState {
   subscriptionTier: SubscriptionTier;
   isPro: boolean;
   isBase: boolean;
-  setAuth: (userId: string, userName: string) => void;
+  setAuth: (userId: string, userName: string | null) => void;
   clearAuth: () => void;
   setSubscription: (status: SubscriptionStatus, tier: SubscriptionTier) => void;
 }
@@ -45,11 +45,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 interface OnboardingState {
   currentStep: number;
+  userName: string;
   selectedGoals: MantraCategory[];
   selectedApps: GatedApp[];
   selectedTier: SubscriptionTier;
   selectedPlan: string;
   setStep: (step: number) => void;
+  setUserName: (name: string) => void;
   setGoals: (goals: MantraCategory[]) => void;
   toggleGoal: (goal: MantraCategory) => void;
   setApps: (apps: GatedApp[]) => void;
@@ -61,11 +63,13 @@ interface OnboardingState {
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({
   currentStep: 1,
+  userName: '',
   selectedGoals: [],
   selectedApps: [],
   selectedTier: 'pro',
   selectedPlan: 'pausemantra_pro_annual',
   setStep: (step) => set({ currentStep: step }),
+  setUserName: (name) => set({ userName: name }),
   setGoals: (goals) => set({ selectedGoals: goals }),
   toggleGoal: (goal) =>
     set((state) => ({
@@ -92,6 +96,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   reset: () =>
     set({
       currentStep: 1,
+      userName: '',
       selectedGoals: [],
       selectedApps: [],
       selectedTier: 'pro',

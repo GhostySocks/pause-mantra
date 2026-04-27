@@ -1,44 +1,117 @@
-import { useState, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, FlatList } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { GradientBackground, ModalSheet } from '@/components/ui';
+import { GradientBackground, GlassCard, PillButton, ModalSheet } from '@/components/ui';
 import { HeartButton } from '@/components/HeartButton';
-import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius, MANTRA_CATEGORIES } from '@/constants';
+import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius } from '@/constants';
 import { useAuthStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
+import { useHeart } from '@/hooks/useHearts';
+import type { Mantra } from '@/types';
 
-type LibraryTab = 'Featured' | 'Liked' | 'Master';
-
-// Placeholder data
-const FEATURED_MANTRA = {
-  id: '2',
-  text: 'The universe is conspiring in my favour right now.',
-  category: 'Manifestation',
-};
-
-const LIKED_MANTRAS = [
-  { id: '3', text: 'I attract wealth and prosperity effortlessly.', category: 'Abundance' },
-  { id: '4', text: 'I am enough, exactly as I am.', category: 'Self-Love' },
-  { id: '5', text: 'My time and energy are sacred.', category: 'Focus' },
-];
-
-const CATEGORY_COUNTS: Record<string, number> = {
-  Abundance: 680, 'Self-Love': 710, Confidence: 640, Health: 590, Gratitude: 720,
-  Focus: 650, Connection: 570, Success: 690, Peace: 730, Creativity: 610,
-  Vitality: 540, Courage: 580, Purpose: 660, Manifestation: 700, Clarity: 620,
-};
+function LikedMantraRow({ mantra, onToggle }: { mantra: Mantra; onToggle: () => void }) {
+  const { liked, toggle } = useHeart(mantra.id);
+  return (
+    <View style={styles.likedRow}>
+      <View style={styles.likedContent}>
+        <Text style={styles.likedMantra}>{mantra.text}</Text>
+      </View>
+      <HeartButton
+        filled={liked}
+        onPress={async () => {
+          await toggle();
+          onToggle();
+        }}
+        size={16}
+      />
+    </View>
+  );
+}
 
 export default function LibraryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { isPro } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<LibraryTab>('Featured');
-  const [featuredLiked, setFeaturedLiked] = useState(false);
+  const { isPro, userId } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const likedCount = LIKED_MANTRAS.length;
+  const [likedMantras, setLikedMantras] = useState<Mantra[]>([]);
+  const [featuredMantra, setFeaturedMantra] = useState<Mantra | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const tabs: LibraryTab[] = ['Featured', 'Liked', 'Master'];
+  const fetchLiked = useCallback(async () => {
+    if (!userId) return;
+
+    const { data: liked, error: likedError } = await supabase
+      .from('liked_mantras')
+      .select('mantra_id')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (likedError) {
+      console.warn('Failed to fetch liked mantras:', likedError.message);
+      return;
+    }
+    if (!liked || liked.length === 0) {
+      setLikedMantras([]);
+      setFeaturedMantra(null);
+      return;
+    }
+
+    const mantraIds = liked.map((row) => row.mantra_id);
+    const { data: mantras, error: mantrasError } = await supabase
+      .from('mantras')
+      .select('id, text, category')
+      .in('id', mantraIds);
+
+    if (mantrasError) {
+      console.warn('Failed to fetch mantra details:', mantrasError.message);
+      return;
+    }
+
+    const mantraMap = new Map((mantras ?? []).map((m) => [m.id, m]));
+    const ordered = mantraIds
+      .map((id) => mantraMap.get(id))
+      .filter((m): m is Mantra => m !== undefined);
+    setLikedMantras(ordered);
+
+    // Pick a random featured mantra from liked
+    if (ordered.length > 0 && !featuredMantra) {
+      setFeaturedMantra(ordered[Math.floor(Math.random() * ordered.length)]);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchLiked();
+  }, [fetchLiked]);
+
+  const shuffleFeatured = useCallback(() => {
+    if (likedMantras.length === 0) return;
+    setRefreshing(true);
+    setFeaturedMantra((current) => {
+      if (likedMantras.length === 1) return likedMantras[0];
+      // Keep picking until we get a different one
+      let next = likedMantras[Math.floor(Math.random() * likedMantras.length)];
+      while (next.id === current?.id) {
+        next = likedMantras[Math.floor(Math.random() * likedMantras.length)];
+      }
+      return next;
+    });
+    setTimeout(() => setRefreshing(false), 300);
+  }, [likedMantras]);
+
+  const likedCount = likedMantras.length;
+
+  // Group liked mantras by category
+  const likedByCategory: Record<string, Mantra[]> = {};
+  for (const m of likedMantras) {
+    if (!likedByCategory[m.category]) {
+      likedByCategory[m.category] = [];
+    }
+    likedByCategory[m.category].push(m);
+  }
+  const categoriesWithLikes = Object.keys(likedByCategory).sort();
 
   return (
     <GradientBackground>
@@ -50,121 +123,103 @@ export default function LibraryScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.screenLabel}>LIBRARY</Text>
-            <Text style={styles.screenTitle}>Explore mantras</Text>
+            <Text style={styles.screenTitle}>Your mantras</Text>
           </View>
-          <Pressable style={styles.searchIcon}>
-            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-              <Path d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" stroke={Colors.mauve} strokeWidth={1.5} strokeLinecap="round" />
-            </Svg>
-          </Pressable>
+          <Text style={styles.likedCountBadge}>{likedCount} liked</Text>
         </View>
 
-        {/* Tab strip */}
-        <View style={styles.tabStrip}>
-          {tabs.map((tab) => (
-            <Pressable
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              style={[styles.tab, activeTab === tab && styles.tabActive]}
-            >
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Tab content */}
-        {activeTab === 'Featured' && (
-          <View style={styles.featuredCard}>
+        {/* Featured liked mantra */}
+        {likedMantras.length > 0 && featuredMantra ? (
+          <GlassCard style={styles.featuredCard}>
             <View style={styles.featuredHeader}>
-              <Text style={styles.featuredLabel}>FEATURED</Text>
-              <Pressable>
-                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                  <Path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke={Colors.teal} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              <Text style={styles.featuredLabel}>FROM YOUR COLLECTION</Text>
+              <Pressable
+                onPress={shuffleFeatured}
+                disabled={refreshing}
+                hitSlop={12}
+                style={styles.refreshButton}
+              >
+                <Svg
+                  width={14}
+                  height={14}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={refreshing ? { opacity: 0.4 } : undefined}
+                >
+                  <Path
+                    d="M23 4v6h-6M1 20v-6h6"
+                    stroke={Colors.teal}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <Path
+                    d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                    stroke={Colors.teal}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </Svg>
               </Pressable>
             </View>
-            <Text style={styles.featuredMantra}>{FEATURED_MANTRA.text}</Text>
+            <Text style={[styles.featuredText, refreshing && { opacity: 0.4 }]}>
+              {featuredMantra.text}
+            </Text>
             <View style={styles.featuredFooter}>
               <View style={styles.categoryPill}>
-                <Text style={styles.categoryText}>{FEATURED_MANTRA.category}</Text>
+                <Text style={styles.categoryPillText}>{featuredMantra.category}</Text>
               </View>
-              <HeartButton
-                filled={featuredLiked}
-                onPress={() => setFeaturedLiked(!featuredLiked)}
-                size={20}
-              />
             </View>
-          </View>
+          </GlassCard>
+        ) : (
+          <GlassCard style={styles.emptyCard}>
+            <Text style={styles.emptyEmoji}>{'✦'}</Text>
+            <Text style={styles.emptyTitle}>Your library is empty</Text>
+            <Text style={styles.emptyBody}>
+              Tap the heart on any mantra to start building your personal collection.
+            </Text>
+          </GlassCard>
         )}
 
-        {activeTab === 'Liked' && (
-          <View style={styles.likedCard}>
-            <Text style={styles.likedLabel}>{likedCount} liked mantras</Text>
-            {LIKED_MANTRAS.map((mantra) => (
-              <View key={mantra.id} style={styles.likedRow}>
-                <View style={styles.likedContent}>
-                  <Text style={styles.likedMantra}>{mantra.text}</Text>
-                  <Text style={styles.likedCategory}>{mantra.category}</Text>
-                </View>
-                <HeartButton filled onPress={() => {}} size={16} />
+        {/* Master Mantra card */}
+        {isPro && likedCount >= 5 && (
+          <Pressable onPress={() => router.push('/master-mantra')}>
+            <GlassCard style={styles.masterNudge} borderRadius={16} padding={16}>
+              <View style={styles.masterNudgeContent}>
+                <Text style={styles.masterNudgeTitle}>Your Master Mantra {'✦'}</Text>
+                <Text style={styles.masterNudgeSub}>Synthesised from {likedCount} liked mantras</Text>
               </View>
-            ))}
-          </View>
+              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                <Path d="M9 18l6-6-6-6" stroke={Colors.teal} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </GlassCard>
+          </Pressable>
         )}
 
-        {activeTab === 'Master' && (
-          <View style={styles.masterCard}>
-            {likedCount >= 5 ? (
-              <>
-                <Text style={styles.masterMantraText}>
-                  I am abundant, present and deeply connected to my own power — moving through life with ease, intention and grace.
-                </Text>
-                <View style={styles.masterButtons}>
-                  <Pressable style={styles.regenerateButton}>
-                    <Text style={styles.regenerateText}>Regenerate</Text>
-                  </Pressable>
-                  <Pressable style={styles.setGateButton}>
-                    <Text style={styles.setGateText}>Set as gate</Text>
-                  </Pressable>
-                </View>
-              </>
-            ) : (
-              <View style={styles.masterLocked}>
-                <Text style={{ fontSize: 28, opacity: 0.4 }}>{'♥'}</Text>
-                <Text style={styles.masterLockedTitle}>Heart 5 mantras to unlock</Text>
-                <Text style={styles.masterLockedBody}>
-                  Your Master Mantra is synthesised from the mantras you love most.
-                </Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${(likedCount / 5) * 100}%` }]} />
-                </View>
-                <Text style={styles.progressCount}>{likedCount} / 5</Text>
-              </View>
-            )}
-          </View>
+        {/* Categories — only shows categories with liked mantras */}
+        {categoriesWithLikes.length > 0 && (
+          <>
+            <Text style={styles.categoriesLabel}>YOUR CATEGORIES</Text>
+            <View style={styles.chipGrid}>
+              {categoriesWithLikes.map((cat) => (
+                <Pressable
+                  key={cat}
+                  style={styles.categoryChip}
+                  onPress={() => setSelectedCategory(cat)}
+                >
+                  <Text style={styles.categoryChipName}>{cat}</Text>
+                  <Text style={styles.categoryChipCount}>
+                    {likedByCategory[cat].length} liked
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
         )}
-
-        {/* Category chips */}
-        <Text style={styles.categoriesLabel}>CATEGORIES</Text>
-        <View style={styles.chipGrid}>
-          {MANTRA_CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat}
-              style={styles.categoryChip}
-              onPress={() => setSelectedCategory(cat)}
-            >
-              <Text style={styles.categoryChipName}>{cat}</Text>
-              <Text style={styles.categoryChipCount}>
-                {CATEGORY_COUNTS[cat] ?? 0} total
-              </Text>
-            </Pressable>
-          ))}
-        </View>
       </ScrollView>
 
-      {/* Category modal */}
+      {/* Category modal — shows only liked mantras in that category */}
       <ModalSheet
         visible={selectedCategory !== null}
         onClose={() => setSelectedCategory(null)}
@@ -174,19 +229,19 @@ export default function LibraryScreen() {
             <View>
               <Text style={styles.modalTitle}>{selectedCategory}</Text>
               <Text style={styles.modalCount}>
-                {CATEGORY_COUNTS[selectedCategory ?? ''] ?? 0} mantras
+                {likedByCategory[selectedCategory ?? '']?.length ?? 0} liked mantras
               </Text>
             </View>
-            <Pressable onPress={() => setSelectedCategory(null)}>
+            <Pressable
+              onPress={() => setSelectedCategory(null)}
+              hitSlop={16}
+              style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+            >
               <Text style={{ color: Colors.mauve, fontSize: 18 }}>{'✕'}</Text>
             </Pressable>
           </View>
-          {/* Placeholder mantra rows */}
-          {['I attract wealth and prosperity effortlessly.', 'Money flows to me from multiple sources.', 'I am a magnet for abundance in all its forms.'].map((text, i) => (
-            <View key={i} style={styles.modalMantraRow}>
-              <Text style={styles.modalMantraText}>{text}</Text>
-              <HeartButton filled={false} onPress={() => {}} size={18} />
-            </View>
+          {(likedByCategory[selectedCategory ?? ''] ?? []).map((mantra) => (
+            <LikedMantraRow key={mantra.id} mantra={mantra} onToggle={fetchLiked} />
           ))}
         </View>
       </ModalSheet>
@@ -202,7 +257,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     marginBottom: 20,
   },
   screenLabel: {
@@ -217,48 +272,21 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.sectionTitle,
     color: Colors.cream,
   },
-  searchIcon: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabStrip: {
-    flexDirection: 'row',
-    backgroundColor: Colors.chipBg,
-    borderRadius: Radius.pill,
-    padding: 3,
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: Radius.pill,
-  },
-  tabActive: {
-    backgroundColor: Colors.teal,
-  },
-  tabText: {
+  likedCountBadge: {
     fontFamily: Fonts.inter.regular,
-    fontSize: FontSizes.bodySmall,
+    fontSize: FontSizes.caption,
     color: Colors.mauve,
+    marginBottom: 4,
   },
-  tabTextActive: {
-    fontFamily: Fonts.inter.medium,
-    color: Colors.tealDark,
-  },
+
+  // Featured card
   featuredCard: {
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: Radius.card,
-    padding: 20,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   featuredHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
   },
   featuredLabel: {
@@ -267,16 +295,21 @@ const styles = StyleSheet.create({
     letterSpacing: LetterSpacing.sectionLabel,
     color: Colors.teal,
   },
-  featuredMantra: {
+  refreshButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featuredText: {
     fontFamily: Fonts.cormorant.italic,
-    fontSize: FontSizes.mantraList,
+    fontSize: FontSizes.mantraGate,
     color: Colors.cream,
-    lineHeight: FontSizes.mantraList * LineHeights.normal,
+    lineHeight: FontSizes.mantraGate * 1.55,
     marginBottom: 16,
   },
   featuredFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   categoryPill: {
@@ -285,25 +318,58 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
   },
-  categoryText: {
+  categoryPillText: {
     fontFamily: Fonts.inter.regular,
     fontSize: FontSizes.caption,
     color: Colors.mauve,
   },
-  likedCard: {
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: Radius.card,
-    padding: 20,
-    marginBottom: 24,
-  },
-  likedLabel: {
-    fontFamily: Fonts.inter.regular,
-    fontSize: FontSizes.caption,
-    color: Colors.mauve,
+
+  // Empty state
+  emptyCard: {
+    alignItems: 'center',
     marginBottom: 16,
   },
+  emptyEmoji: {
+    fontSize: 32,
+    color: Colors.teal,
+    opacity: 0.4,
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    fontFamily: Fonts.inter.medium,
+    fontSize: FontSizes.buttonLarge,
+    color: Colors.cream,
+    marginBottom: 8,
+  },
+  emptyBody: {
+    fontFamily: Fonts.inter.regular,
+    fontSize: FontSizes.bodySmall,
+    color: Colors.mauve,
+    textAlign: 'center',
+    lineHeight: FontSizes.bodySmall * LineHeights.relaxed,
+  },
+
+  // Master mantra nudge
+  masterNudge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  masterNudgeContent: {
+    flex: 1,
+  },
+  masterNudgeTitle: {
+    fontFamily: Fonts.inter.medium,
+    fontSize: FontSizes.label,
+    color: Colors.cream,
+  },
+  masterNudgeSub: {
+    fontFamily: Fonts.inter.regular,
+    fontSize: FontSizes.caption,
+    color: Colors.teal,
+  },
+
+  // Liked rows (used in modal too)
   likedRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -320,99 +386,15 @@ const styles = StyleSheet.create({
     color: Colors.cream,
     lineHeight: FontSizes.mantraSmall * LineHeights.normal,
   },
-  likedCategory: {
-    fontFamily: Fonts.inter.regular,
-    fontSize: FontSizes.micro,
-    color: 'rgba(196,168,224,0.5)',
-    marginTop: 2,
-  },
-  masterCard: {
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: Radius.card,
-    padding: 20,
-    marginBottom: 24,
-  },
-  masterMantraText: {
-    fontFamily: Fonts.cormorant.italic,
-    fontSize: 18,
-    color: Colors.cream,
-    lineHeight: 18 * LineHeights.relaxed,
-    marginBottom: 16,
-  },
-  masterButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  regenerateButton: {
-    flex: 1,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(126,200,192,0.3)',
-    backgroundColor: 'rgba(126,200,192,0.15)',
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  regenerateText: {
-    fontFamily: Fonts.inter.medium,
-    fontSize: FontSizes.bodySmall,
-    color: Colors.teal,
-  },
-  setGateButton: {
-    flex: 1,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.teal,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  setGateText: {
-    fontFamily: Fonts.inter.medium,
-    fontSize: FontSizes.bodySmall,
-    color: Colors.tealDark,
-  },
-  masterLocked: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  masterLockedTitle: {
-    fontFamily: Fonts.inter.medium,
-    fontSize: FontSizes.label,
-    color: Colors.cream,
-    marginTop: 8,
-  },
-  masterLockedBody: {
-    fontFamily: Fonts.inter.regular,
-    fontSize: FontSizes.caption,
-    color: Colors.mauve,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  progressTrack: {
-    width: '100%',
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: Radius.pill,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.teal,
-    borderRadius: Radius.pill,
-  },
-  progressCount: {
-    fontFamily: Fonts.inter.regular,
-    fontSize: FontSizes.micro,
-    color: 'rgba(196,168,224,0.5)',
-    marginTop: 6,
-  },
+
+  // Categories
   categoriesLabel: {
     fontFamily: Fonts.inter.regular,
     fontSize: FontSizes.micro,
     letterSpacing: LetterSpacing.statLabel,
     color: Colors.mauve,
     marginBottom: 12,
+    marginTop: 8,
   },
   chipGrid: {
     flexDirection: 'row',
@@ -440,6 +422,8 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.micro,
     color: 'rgba(196,168,224,0.4)',
   },
+
+  // Category modal
   modalContent: {
     paddingHorizontal: 24,
   },
@@ -458,19 +442,5 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.inter.regular,
     fontSize: FontSizes.caption,
     color: Colors.teal,
-  },
-  modalMantraRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.separator,
-  },
-  modalMantraText: {
-    flex: 1,
-    fontFamily: Fonts.cormorant.italic,
-    fontSize: FontSizes.categoryModal,
-    color: Colors.cream,
-    lineHeight: FontSizes.categoryModal * LineHeights.normal,
   },
 });

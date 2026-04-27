@@ -102,6 +102,6 @@ export const Colors = {
   searchBorder: 'rgba(216,180,254,0.1)',
 
   // Status pills
-  statusEntered: '#7EC8C0',
-  statusClosed: '#C4A8E0',
+  statusEntered: '#C4A8E0',
+  statusClosed: '#7EC8C0',
 } as const;

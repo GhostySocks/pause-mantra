@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { GradientBackground, PillButton } from '@/components/ui';
 import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius } from '@/constants';
+import { useOnboardingStore } from '@/lib/store';
 
 const PROOF_POINTS = [
   { icon: 'shield', label: 'Gate any app behind a mantra' },
@@ -43,9 +44,10 @@ function ProofPointIcon({ name }: { name: string }) {
 export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { userName, setUserName } = useOnboardingStore();
 
   return (
-    <GradientBackground>
+    <GradientBackground showStars={false}>
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 52 }]}
         showsVerticalScrollIndicator={false}
@@ -57,7 +59,7 @@ export default function WelcomeScreen() {
         </Text>
 
         <Text style={styles.body}>
-          Pause Mantra turns mindless app-opens into moments of intention — one mantra at a time.
+          Pause Mantra turns mindless app-opens into moments of intention, one mantra at a time.
         </Text>
 
         <View style={styles.proofPoints}>
@@ -70,12 +72,27 @@ export default function WelcomeScreen() {
             </View>
           ))}
         </View>
+
+        {/* Name input */}
+        <View style={styles.nameSection}>
+          <Text style={styles.nameLabel}>What should we call you?</Text>
+          <TextInput
+            style={styles.nameInput}
+            placeholder="Your first name"
+            placeholderTextColor="rgba(196,168,224,0.4)"
+            value={userName}
+            onChangeText={setUserName}
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
+        </View>
       </ScrollView>
 
       <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 48 }]}>
         <PillButton
           label="Begin your practice"
           onPress={() => router.push('/(auth)/goals')}
+          disabled={userName.trim().length === 0}
         />
         <Text style={styles.subLabel}>
           7-day free trial {'·'} No card required
@@ -132,6 +149,26 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.bodySmall,
     color: Colors.lavender,
     flex: 1,
+  },
+  nameSection: {
+    marginTop: 28,
+  },
+  nameLabel: {
+    fontFamily: Fonts.cormorant.medium,
+    fontSize: FontSizes.mantraCard,
+    color: Colors.cream,
+    marginBottom: 12,
+  },
+  nameInput: {
+    fontFamily: Fonts.inter.regular,
+    fontSize: FontSizes.bodySmall,
+    color: Colors.cream,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(216,180,254,0.2)',
+    borderRadius: Radius.pill,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
   },
   bottomSection: {
     paddingHorizontal: Spacing['3xl'],

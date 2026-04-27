@@ -1,12 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet, ScrollView, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
-import { GradientBackground } from '@/components/ui';
+import { GradientBackground, GlassCard } from '@/components/ui';
 import { HeartButton } from '@/components/HeartButton';
 import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius } from '@/constants';
 import { useAuthStore } from '@/lib/store';
+import { useRandomMantra } from '@/hooks/useMantras';
+import { useHeart } from '@/hooks/useHearts';
+import { useGateStats } from '@/hooks/useGate';
+import { supabase } from '@/lib/supabase';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -15,10 +20,10 @@ function getGreeting(): string {
   return 'Good evening,';
 }
 
-const PLACEHOLDER_MANTRA = {
-  id: '1',
+const FALLBACK_MANTRA = {
+  id: 'fallback',
   text: 'I am exactly where I need to be, growing in ways I cannot yet see.',
-  category: 'Peace',
+  category: 'Peace' as const,
 };
 
 // Home screen tour tooltips
@@ -30,7 +35,7 @@ interface TourStep {
 
 const TOUR_STEPS: TourStep[] = [
   {
-    text: "Welcome home! This is your daily mantra — a new one every time you open the app.",
+    text: "Welcome home! This is your daily mantra, a new one every time you open the app.",
     button: 'Next',
     position: { top: 280, left: 24, right: 24 },
   },
@@ -40,12 +45,12 @@ const TOUR_STEPS: TourStep[] = [
     position: { top: 340, left: 24, right: 24 },
   },
   {
-    text: "These tiles track your practice — streak, gates today, and total mantras liked.",
+    text: "These tiles track your practice: streak, gates today, and total mantras liked.",
     button: 'Next',
     position: { top: 460, left: 24, right: 24 },
   },
   {
-    text: "Once you've hearted 5 mantras, your Master Mantra unlocks — a personal affirmation synthesised just for you.",
+    text: "Once you've hearted 5 mantras, your Master Mantra unlocks. A personal affirmation synthesised just for you.",
     button: 'Next',
     position: { bottom: 180, left: 24, right: 24 },
   },
@@ -68,10 +73,36 @@ function FadeInView({ children, step }: { children: React.ReactNode; step: numbe
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { userName } = useAuthStore();
-  const [heartFilled, setHeartFilled] = useState(false);
+  const { userName, userId } = useAuthStore();
+  const { mantra, loading, fetchNext } = useRandomMantra();
+  const currentMantra = mantra ?? FALLBACK_MANTRA;
+  const { liked, toggle: toggleHeart } = useHeart(currentMantra.id);
+  const [likedCount, setLikedCount] = useState(0);
+  const { todayCount, streak } = useGateStats();
   const [tourStep, setTourStep] = useState(0);
-  const [showTour, setShowTour] = useState(true);
+  const [showTour, setShowTour] = useState(false);
+  const [showLockedTip, setShowLockedTip] = useState(false);
+
+  // Fetch liked count directly from Supabase
+  const refreshLikedCount = useCallback(async () => {
+    if (!userId) return;
+    const { count } = await supabase
+      .from('liked_mantras')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .is('deleted_at', null);
+    setLikedCount(count ?? 0);
+  }, [userId]);
+
+  useEffect(() => {
+    refreshLikedCount();
+  }, [refreshLikedCount]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('home_tour_completed').then((val) => {
+      if (val !== 'true') setShowTour(true);
+    });
+  }, []);
 
   const greeting = getGreeting();
   const displayName = userName ?? 'there';
@@ -82,6 +113,7 @@ export default function HomeScreen() {
       setTourStep(tourStep + 1);
     } else {
       setShowTour(false);
+      AsyncStorage.setItem('home_tour_completed', 'true');
     }
   };
 
@@ -97,62 +129,141 @@ export default function HomeScreen() {
         <Text style={styles.greetingName}>{displayName} {'✦'}</Text>
 
         {/* Mantra card */}
-        <View style={styles.mantraCard}>
-          <Text style={styles.mantraLabel}>TODAY'S MANTRA</Text>
-          <Text style={styles.mantraText}>{PLACEHOLDER_MANTRA.text}</Text>
+        <GlassCard style={styles.mantraCard}>
+          <View style={styles.mantraHeader}>
+            <Text style={styles.mantraLabel}>TODAY'S MANTRA</Text>
+            <Pressable
+              onPress={fetchNext}
+              disabled={loading}
+              hitSlop={12}
+              style={styles.refreshButton}
+            >
+              <Svg
+                width={14}
+                height={14}
+                viewBox="0 0 24 24"
+                fill="none"
+                style={loading ? { opacity: 0.4 } : undefined}
+              >
+                <Path
+                  d="M23 4v6h-6M1 20v-6h6"
+                  stroke={Colors.teal}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                  stroke={Colors.teal}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </Pressable>
+          </View>
+          {loading ? (
+            <Text style={[styles.mantraText, { opacity: 0.4 }]}>Loading...</Text>
+          ) : (
+            <Text style={styles.mantraText}>{currentMantra.text}</Text>
+          )}
           <View style={styles.mantraFooter}>
             <View style={styles.categoryPill}>
-              <Text style={styles.categoryText}>{PLACEHOLDER_MANTRA.category}</Text>
+              <Text style={styles.categoryText}>{currentMantra.category}</Text>
             </View>
             <HeartButton
-              filled={heartFilled}
-              onPress={() => setHeartFilled(!heartFilled)}
+              filled={liked}
+              onPress={async () => {
+                await toggleHeart();
+                refreshLikedCount();
+              }}
               size={20}
             />
           </View>
-        </View>
+        </GlassCard>
 
         {/* Stat tiles */}
         <View style={styles.statRow}>
           <Pressable
-            style={styles.statTile}
             onPress={() => !showTour && router.push('/(tabs)/journal')}
+            style={styles.statTileOuter}
           >
-            <Text style={styles.statLabel}>STREAK</Text>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statUnit}>days {'✦'}</Text>
+            <GlassCard style={styles.statTile} borderRadius={16} padding={16}>
+              <Text style={styles.statLabel}>STREAK</Text>
+              <Text style={styles.statNumber}>{streak}</Text>
+              <Text style={styles.statUnit}>days {'✦'}</Text>
+            </GlassCard>
           </Pressable>
 
-          <Pressable style={styles.statTile}>
-            <Text style={styles.statLabel}>TODAY</Text>
-            <Text style={styles.statNumber}>7</Text>
-            <Text style={styles.statUnit}>gates {'✦'}</Text>
+          <Pressable style={styles.statTileOuter}>
+            <GlassCard style={styles.statTile} borderRadius={16} padding={16}>
+              <Text style={styles.statLabel}>TODAY</Text>
+              <Text style={styles.statNumber}>{todayCount}</Text>
+              <Text style={styles.statUnit}>gates {'✦'}</Text>
+            </GlassCard>
           </Pressable>
 
           <Pressable
-            style={styles.statTile}
             onPress={() => !showTour && router.push('/(tabs)/library')}
+            style={styles.statTileOuter}
           >
-            <Text style={styles.statLabel}>LIKED</Text>
-            <Text style={styles.statNumber}>34</Text>
-            <Text style={styles.statUnit}>mantras {'✦'}</Text>
+            <GlassCard style={styles.statTile} borderRadius={16} padding={16}>
+              <Text style={styles.statLabel}>LIKED</Text>
+              <Text style={styles.statNumber}>{likedCount}</Text>
+              <Text style={styles.statUnit}>mantras {'✦'}</Text>
+            </GlassCard>
           </Pressable>
         </View>
 
         {/* Master Mantra nudge card */}
         <Pressable
-          style={styles.masterCard}
-          onPress={() => !showTour && router.push('/master-mantra')}
+          onPress={() => {
+            if (showTour) return;
+            if (likedCount >= 5) {
+              router.push('/master-mantra');
+            } else {
+              setShowLockedTip(true);
+              setTimeout(() => setShowLockedTip(false), 3000);
+            }
+          }}
         >
+          <GlassCard style={styles.masterCard} borderRadius={16} padding={16}>
           <View style={styles.masterCardContent}>
-            <Text style={styles.masterCardTitle}>Your Master Mantra is ready</Text>
-            <Text style={styles.masterCardSub}>Tap to synthesise from 34 likes</Text>
+            <Text style={styles.masterCardTitle}>
+              {likedCount >= 5 ? 'Your Master Mantra is ready' : 'Unlock your Master Mantra'}
+            </Text>
+            <Text style={styles.masterCardSub}>
+              {likedCount >= 5
+                ? `Tap to synthesise from ${likedCount} likes`
+                : `Heart ${5 - likedCount} more mantra${5 - likedCount === 1 ? '' : 's'} to unlock`}
+            </Text>
           </View>
           <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
             <Path d="M9 18l6-6-6-6" stroke={Colors.teal} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
+          </GlassCard>
         </Pressable>
+
       </ScrollView>
+
+      {/* Locked tooltip overlay */}
+      {showLockedTip && (
+        <>
+          <Pressable style={styles.lockedBackdrop} onPress={() => setShowLockedTip(false)} />
+          <View style={styles.lockedOverlay} pointerEvents="box-none">
+            <FadeInView step={0}>
+              <View style={styles.lockedTip}>
+                <Text style={styles.lockedTipText}>
+                  Heart {5 - likedCount} more mantra{5 - likedCount === 1 ? '' : 's'} to unlock your Master Mantra — a personal affirmation synthesised just for you.
+                </Text>
+                <Pressable onPress={() => setShowLockedTip(false)} style={styles.lockedTipButton}>
+                  <Text style={styles.lockedTipButtonText}>Got it</Text>
+                </Pressable>
+              </View>
+            </FadeInView>
+          </View>
+        </>
+      )}
 
       {/* Tour overlay */}
       {currentTour && (
@@ -204,25 +315,31 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   mantraCard: {
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: Radius.card,
-    padding: Spacing.xl,
     marginBottom: Spacing.base,
+  },
+  mantraHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  refreshButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mantraLabel: {
     fontFamily: Fonts.inter.regular,
     fontSize: FontSizes.micro,
     letterSpacing: LetterSpacing.sectionLabel,
     color: Colors.teal,
-    marginBottom: 12,
   },
   mantraText: {
     fontFamily: Fonts.cormorant.italic,
-    fontSize: FontSizes.mantraCard,
+    fontSize: FontSizes.mantraGate,
     color: Colors.cream,
-    lineHeight: FontSizes.mantraCard * LineHeights.normal,
+    lineHeight: FontSizes.mantraGate * 1.55,
     marginBottom: 16,
   },
   mantraFooter: {
@@ -246,13 +363,10 @@ const styles = StyleSheet.create({
     gap: Spacing.tileGap,
     marginBottom: Spacing.base,
   },
-  statTile: {
+  statTileOuter: {
     flex: 1,
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: 'rgba(216,180,254,0.12)',
-    borderRadius: Radius.tile,
-    padding: Spacing.tilePadding,
+  },
+  statTile: {
     alignItems: 'center',
   },
   statLabel: {
@@ -273,12 +387,6 @@ const styles = StyleSheet.create({
     color: Colors.teal,
   },
   masterCard: {
-    backgroundColor: Colors.masterCardBg,
-    borderWidth: 1,
-    borderColor: Colors.masterCardBorder,
-    borderRadius: Radius.tile,
-    padding: 16,
-    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -294,6 +402,45 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.inter.regular,
     fontSize: FontSizes.caption,
     color: Colors.teal,
+  },
+
+  // Locked tooltip
+  lockedBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    zIndex: 20,
+  },
+  lockedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    zIndex: 21,
+  },
+  lockedTip: {
+    backgroundColor: Colors.tooltipBg,
+    borderWidth: 1,
+    borderColor: Colors.tooltipBorder,
+    borderRadius: 16,
+    padding: 20,
+  },
+  lockedTipText: {
+    fontFamily: Fonts.inter.regular,
+    fontSize: FontSizes.label,
+    color: Colors.cream,
+    lineHeight: FontSizes.label * 1.55,
+    marginBottom: 12,
+  },
+  lockedTipButton: {
+    backgroundColor: Colors.teal,
+    borderRadius: Radius.pill,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  lockedTipButtonText: {
+    fontFamily: Fonts.inter.medium,
+    fontSize: FontSizes.label,
+    color: Colors.tealDark,
   },
 
   // Tour overlay styles
