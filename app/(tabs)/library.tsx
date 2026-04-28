@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { GradientBackground, GlassCard, PillButton, ModalSheet } from '@/components/ui';
 import { HeartButton } from '@/components/HeartButton';
 import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius } from '@/constants';
 import { useAuthStore } from '@/lib/store';
-import { supabase } from '@/lib/supabase';
+import { getLikedMantras } from '@/lib/sqlite';
 import { useHeart } from '@/hooks/useHearts';
 import type { Mantra } from '@/types';
 
@@ -40,51 +40,23 @@ export default function LibraryScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchLiked = useCallback(async () => {
-    if (!userId) return;
+    const ordered = (await getLikedMantras(userId ?? undefined)) as Mantra[];
+    setLikedMantras(ordered);
 
-    const { data: liked, error: likedError } = await supabase
-      .from('liked_mantras')
-      .select('mantra_id')
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false });
-
-    if (likedError) {
-      console.warn('Failed to fetch liked mantras:', likedError.message);
-      return;
-    }
-    if (!liked || liked.length === 0) {
-      setLikedMantras([]);
+    if (ordered.length === 0) {
       setFeaturedMantra(null);
       return;
     }
-
-    const mantraIds = liked.map((row) => row.mantra_id);
-    const { data: mantras, error: mantrasError } = await supabase
-      .from('mantras')
-      .select('id, text, category')
-      .in('id', mantraIds);
-
-    if (mantrasError) {
-      console.warn('Failed to fetch mantra details:', mantrasError.message);
-      return;
-    }
-
-    const mantraMap = new Map((mantras ?? []).map((m) => [m.id, m]));
-    const ordered = mantraIds
-      .map((id) => mantraMap.get(id))
-      .filter((m): m is Mantra => m !== undefined);
-    setLikedMantras(ordered);
-
-    // Pick a random featured mantra from liked
-    if (ordered.length > 0 && !featuredMantra) {
+    if (!featuredMantra) {
       setFeaturedMantra(ordered[Math.floor(Math.random() * ordered.length)]);
     }
   }, [userId]);
 
-  useEffect(() => {
-    fetchLiked();
-  }, [fetchLiked]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchLiked();
+    }, [fetchLiked])
+  );
 
   const shuffleFeatured = useCallback(() => {
     if (likedMantras.length === 0) return;

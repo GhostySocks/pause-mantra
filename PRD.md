@@ -647,8 +647,8 @@ The gate screen is the most important screen in the app. It renders as a modal o
 | Milestone | Target | Deliverables |
 |-----------|--------|-------------|
 | M0 — Setup | Week 1–2 | Repo init, Expo project, Supabase schema + RLS, RevenueCat config (all 5 product IDs), Apple Developer + Google Play accounts, 1Password vault, all external service accounts created. Apply for FamilyControls entitlement in background (non-blocking). |
-| M1 — Alpha | Week 3–5 | Gate mechanism working (iOS v1.0 notification-based + Android full overlay), all onboarding screens (welcome → paywall), splash screen, 100 seed mantras in SQLite, basic auth |
-| M2 — Beta | Week 6–9 | Full mantra library (OFFL-05 pipeline, 3,000+ mantras at launch), paywall + RevenueCat (both tiers), journal + heatmap, reflection notes (Base), hearts system, TestFlight + Play Internal |
+| M1 — Alpha | Week 3–5 | Gate mechanism working (iOS v1.0 notification-based + Android full overlay), all onboarding screens (welcome → paywall), splash screen, 100 seed mantras in SQLite, anonymous Supabase auth (device-local; no recovery across devices) |
+| M2 — Beta | Week 6–9 | Full mantra library (OFFL-05 pipeline, 3,000+ mantras at launch), paywall + RevenueCat (both tiers), journal + heatmap, reflection notes (Base), hearts system, TestFlight + Play Internal, **Apple SSO + Google SSO + email auth** (link anonymous → permanent account via `supabase.auth.linkIdentity`; account UI in Settings: sign in, sign out, switch account) |
 | M3 — Soft Launch | Week 10–12 | ProductHunt launch, waitlist invite, 1K users, Sentry live, privacy policy live, A/B test paywall, App Store Optimisation (screenshots, icon, copy) |
 | M4 — AI Features | Week 13–16 | Master Mantra synthesis (MSTR-01–06), reflection prompts on gate (Pro), custom mantras (MNTR-04), push notifications (streak reminders) |
 | M5 — Growth | Month 5+ | Paid social, influencer program, Android OEM optimisation, referral loop, schedules & rituals (SCHED-01–02) |

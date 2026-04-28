@@ -19,9 +19,12 @@ export function useHeart(mantraId: string) {
     const newState = await toggleLikedMantra(mantraId);
     setLiked(newState);
 
-    // Sync to Supabase — await so callers can refresh after
+    // Sync to Supabase — await so callers can refresh after.
+    // Skip non-UUID ids (e.g. the FALLBACK_MANTRA shown before the real one loads)
+    // because liked_mantras.mantra_id has a UUID FK to mantras.id.
     const { userId } = useAuthStore.getState();
-    if (userId) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mantraId);
+    if (userId && isUuid) {
       if (newState) {
         const { error } = await supabase
           .from('liked_mantras')

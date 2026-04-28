@@ -213,6 +213,46 @@ export async function isMantraLiked(mantraId: string, userId?: string): Promise<
   return (data?.length ?? 0) > 0;
 }
 
+export async function getLikedMantras(
+  userId?: string
+): Promise<{ id: string; text: string; category: string }[]> {
+  const database = await getDatabase();
+
+  if (database) {
+    try {
+      const local = await database.getAllAsync<{ id: string; text: string; category: string }>(
+        `SELECT m.id, m.text, m.category
+         FROM liked_mantras_local l
+         JOIN mantras_cache m ON l.mantra_id = m.id
+         WHERE l.deleted_at IS NULL
+         ORDER BY l.created_at DESC`
+      );
+      if (local.length > 0) return local;
+    } catch (e) {
+      console.warn('SQLite getLikedMantras failed, using Supabase:', e);
+    }
+  }
+
+  if (!userId) return [];
+  const { data: liked } = await supabase
+    .from('liked_mantras')
+    .select('mantra_id')
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  if (!liked || liked.length === 0) return [];
+
+  const ids = liked.map((r) => r.mantra_id);
+  const { data: mantras } = await supabase
+    .from('mantras')
+    .select('id, text, category')
+    .in('id', ids);
+
+  const map = new Map((mantras ?? []).map((m) => [m.id, m]));
+  return ids.map((id) => map.get(id)).filter((m): m is { id: string; text: string; category: string } => m !== undefined);
+}
+
 export async function getLikedMantrasCount(userId?: string): Promise<number> {
   const database = await getDatabase();
 

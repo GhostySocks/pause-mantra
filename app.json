@@ -34,15 +34,23 @@
       "expo-router",
       "expo-font",
       "expo-sqlite",
+      "expo-dev-client",
       [
         "expo-splash-screen",
         {
+          "image": "./assets/splash-icon.png",
           "backgroundColor": "#321650",
           "dark": {
             "backgroundColor": "#321650"
           }
         }
       ]
-    ]
+    ],
+    "owner": "ghostysocks",
+    "extra": {
+      "eas": {
+        "projectId": "9017ad21-2227-43fa-9189-3a36c649b4a7"
+      }
+    }
   }
 }

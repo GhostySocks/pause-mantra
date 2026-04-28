@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet, ScrollView, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,11 +7,10 @@ import Svg, { Path } from 'react-native-svg';
 import { GradientBackground, GlassCard } from '@/components/ui';
 import { HeartButton } from '@/components/HeartButton';
 import { Colors, Fonts, FontSizes, LetterSpacing, LineHeights, Spacing, Radius } from '@/constants';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore, useOnboardingStore } from '@/lib/store';
 import { useRandomMantra } from '@/hooks/useMantras';
-import { useHeart } from '@/hooks/useHearts';
+import { useHeart, useLikedCount } from '@/hooks/useHearts';
 import { useGateStats } from '@/hooks/useGate';
-import { supabase } from '@/lib/supabase';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -73,30 +72,17 @@ function FadeInView({ children, step }: { children: React.ReactNode; step: numbe
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { userName, userId } = useAuthStore();
-  const { mantra, loading, fetchNext } = useRandomMantra();
+  const { userName } = useAuthStore();
+  const { selectedGoals } = useOnboardingStore();
+  const { mantra, loading, fetchNext } = useRandomMantra(selectedGoals);
   const currentMantra = mantra ?? FALLBACK_MANTRA;
+  const isFallbackMantra = mantra === null;
   const { liked, toggle: toggleHeart } = useHeart(currentMantra.id);
-  const [likedCount, setLikedCount] = useState(0);
+  const { count: likedCount, refresh: refreshLikedCount } = useLikedCount();
   const { todayCount, streak } = useGateStats();
   const [tourStep, setTourStep] = useState(0);
   const [showTour, setShowTour] = useState(false);
   const [showLockedTip, setShowLockedTip] = useState(false);
-
-  // Fetch liked count directly from Supabase
-  const refreshLikedCount = useCallback(async () => {
-    if (!userId) return;
-    const { count } = await supabase
-      .from('liked_mantras')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .is('deleted_at', null);
-    setLikedCount(count ?? 0);
-  }, [userId]);
-
-  useEffect(() => {
-    refreshLikedCount();
-  }, [refreshLikedCount]);
 
   useEffect(() => {
     AsyncStorage.getItem('home_tour_completed').then((val) => {
@@ -173,6 +159,7 @@ export default function HomeScreen() {
             </View>
             <HeartButton
               filled={liked}
+              disabled={isFallbackMantra || loading}
               onPress={async () => {
                 await toggleHeart();
                 refreshLikedCount();

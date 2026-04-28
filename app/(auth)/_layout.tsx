@@ -10,6 +10,7 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen name="welcome" />
+      <Stack.Screen name="name" />
       <Stack.Screen name="goals" />
       <Stack.Screen name="apps" />
       <Stack.Screen name="demo" />

@@ -4,8 +4,9 @@ import { useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GradientBackground, PulseRings, LockIcon } from '@/components/ui';
 import { Colors, Fonts, FontSizes, LetterSpacing } from '@/constants';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore, useOnboardingStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
+import type { MantraCategory } from '@/constants/categories';
 
 export default function SplashScreenRoute() {
   const router = useRouter();
@@ -87,20 +88,22 @@ export default function SplashScreenRoute() {
         });
       }
 
-      // Check if user has completed onboarding (has saved goals)
+      // Check if user has completed onboarding (has saved goals).
+      // Hydrate the zustand store so home/gate can filter mantras by these categories.
       const { data: goals } = await supabase
         .from('user_goals')
-        .select('id')
-        .eq('user_id', state.userId)
-        .limit(1);
+        .select('goal')
+        .eq('user_id', state.userId);
 
       if (!goals || goals.length === 0) {
-        // New user — send through onboarding
         router.replace('/(auth)/welcome');
-      } else if (state.subscriptionStatus === 'paused') {
-        router.replace('/paused');
       } else {
-        router.replace('/(tabs)');
+        useOnboardingStore.getState().setGoals(goals.map((g) => g.goal as MantraCategory));
+        if (state.subscriptionStatus === 'paused') {
+          router.replace('/paused');
+        } else {
+          router.replace('/(tabs)');
+        }
       }
     }, 1800);
 

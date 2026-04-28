@@ -7,6 +7,7 @@ interface HeartButtonProps {
   onPress: () => void;
   size?: number;
   color?: string;
+  disabled?: boolean;
 }
 
 export function HeartButton({
@@ -14,11 +15,13 @@ export function HeartButton({
   onPress,
   size = 24,
   color = Colors.teal,
+  disabled = false,
 }: HeartButtonProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={styles.container}
+      disabled={disabled}
+      style={[styles.container, disabled && { opacity: 0.4 }]}
       hitSlop={10}
     >
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

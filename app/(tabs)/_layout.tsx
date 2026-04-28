@@ -41,20 +41,27 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const bottomPadding = Math.max(insets.bottom, 12);
+  const lift = Math.max(insets.bottom, 24);
+  const barHeight = 74;
 
   return (
     <Tabs
+      safeAreaInsets={{ bottom: 0 }}
       screenOptions={{
         headerShown: false,
+        lazy: false,
         tabBarStyle: {
           ...styles.tabBar,
-          paddingBottom: bottomPadding,
-          height: 56 + bottomPadding,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: lift,
+          height: barHeight,
         },
         tabBarActiveTintColor: Colors.tabActive,
         tabBarInactiveTintColor: Colors.tabInactive,
         tabBarLabelStyle: styles.tabLabel,
+        sceneStyle: { paddingBottom: barHeight + lift },
       }}
     >
       <Tabs.Screen
